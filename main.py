@@ -1,5 +1,6 @@
 import sys
-from antlr4 import FileStream, CommonTokenStream, InputStream
+from antlr4 import FileStream, CommonTokenStream, InputStream, ParseTreeWalker
+from ExprListenerImpl import ExprListenerImpl
 from g4.ExprLexer import ExprLexer
 from g4.ExprParser import ExprParser
 from ExprVisitorImpl import ExprVisitorImpl
@@ -16,11 +17,12 @@ def main(argv):
     parser = ExprParser(stream)
     tree = parser.r()
 
-    visitor = ExprVisitorImpl()
-    visitor.visit(tree)
+    walker = ParseTreeWalker()
+    walker.walk(ExprListenerImpl(), tree)
 
-    # tree_str = tree.toStringTree(recog=parser)
-    # print(tree_str)
+    tree_str = tree.toStringTree(recog=parser)
+    print(tree_str)
+    # print(dir(tree))
 
 
 if __name__ == '__main__':

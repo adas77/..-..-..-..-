@@ -2,7 +2,8 @@ PY=python3
 JAVA=java
 ANTLR_JAR=./antlr-4.13.1-complete.jar
 
-ANTLR=$(JAVA) -jar $(ANTLR_JAR) -visitor
+# ANTLR=$(JAVA) -jar $(ANTLR_JAR) -visitor
+ANTLR=$(JAVA) -jar $(ANTLR_JAR)
 
 PATH_ANTLR_OUTPUT=g4
 PATH_G4=Expr.g4

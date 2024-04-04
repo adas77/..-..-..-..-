@@ -19,18 +19,33 @@ class ExprVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
+    # Visit a parse tree produced by ExprParser#declaration.
+    def visitDeclaration(self, ctx:ExprParser.DeclarationContext):
+        return self.visitChildren(ctx)
+
+
     # Visit a parse tree produced by ExprParser#assign.
     def visitAssign(self, ctx:ExprParser.AssignContext):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by ExprParser#array.
-    def visitArray(self, ctx:ExprParser.ArrayContext):
+    # Visit a parse tree produced by ExprParser#arrayDeclaration.
+    def visitArrayDeclaration(self, ctx:ExprParser.ArrayDeclarationContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by ExprParser#arrayAssign.
+    def visitArrayAssign(self, ctx:ExprParser.ArrayAssignContext):
         return self.visitChildren(ctx)
 
 
     # Visit a parse tree produced by ExprParser#print.
     def visitPrint(self, ctx:ExprParser.PrintContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by ExprParser#read.
+    def visitRead(self, ctx:ExprParser.ReadContext):
         return self.visitChildren(ctx)
 
 
@@ -59,6 +74,11 @@ class ExprVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
+    # Visit a parse tree produced by ExprParser#arrayAccess.
+    def visitArrayAccess(self, ctx:ExprParser.ArrayAccessContext):
+        return self.visitChildren(ctx)
+
+
     # Visit a parse tree produced by ExprParser#float.
     def visitFloat(self, ctx:ExprParser.FloatContext):
         return self.visitChildren(ctx)
@@ -66,11 +86,6 @@ class ExprVisitor(ParseTreeVisitor):
 
     # Visit a parse tree produced by ExprParser#int.
     def visitInt(self, ctx:ExprParser.IntContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by ExprParser#value.
-    def visitValue(self, ctx:ExprParser.ValueContext):
         return self.visitChildren(ctx)
 
 

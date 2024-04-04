@@ -18,14 +18,14 @@ class ExprVisitorImpl(ExprVisitor):
         print(value)
         return 0
 
-    def visitArray(self, ctx: ExprParser.ArrayContext):
-        name = ctx.ID().getText()
-        v = ctx.arr()
-        arr_len = len(v.val())
+    # def visitArray(self, ctx: ExprParser.ArrayContext):
+    #     name = ctx.ID().getText()
+    #     v = ctx.arr()
+    #     arr_len = len(v.val())
 
-        self.memory[name] = [float(v.val(i).getText()) if '.' in v.val(
-            i).getText() else int(v.val(i).getText()) for i in range(arr_len)]
-        return self.visitChildren(ctx)
+    #     self.memory[name] = [float(v.val(i).getText()) if '.' in v.val(
+    #         i).getText() else int(v.val(i).getText()) for i in range(arr_len)]
+    #     return self.visitChildren(ctx)
 
     def visitPrint(self, ctx: ExprParser.PrintContext):
         ops = {

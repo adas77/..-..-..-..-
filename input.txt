@@ -1,18 +1,5 @@
-193
-2/5
-1*2*3*4
-a = 5
-b = 6
-a=8
-b=a
-a+b*2
-(1+2)*3
-2+3*4
-2*3+4
-l = {1,2,3,4.0}
+int a
+a = 4
+str = "Hello World"
+a = 2137
 print(a)
-print(3)
-print(3.3)
-print(l)
-print("l")
-print(b)
