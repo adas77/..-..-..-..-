@@ -89,6 +89,15 @@ class ExprListener(ParseTreeListener):
         pass
 
 
+    # Enter a parse tree produced by ExprParser#str.
+    def enterStr(self, ctx:ExprParser.StrContext):
+        pass
+
+    # Exit a parse tree produced by ExprParser#str.
+    def exitStr(self, ctx:ExprParser.StrContext):
+        pass
+
+
     # Enter a parse tree produced by ExprParser#parens.
     def enterParens(self, ctx:ExprParser.ParensContext):
         pass

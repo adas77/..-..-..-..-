@@ -43,9 +43,17 @@ class ExprListenerImpl(ExprListener):
         if TYPE == "int":
             self.memory[ID] = int(0)  # just to be sure
             self.generator.declare_int(ID)
+            print(f"declared int {ID}")
         elif TYPE == "float":
             self.memory[ID] = float(0)
             self.generator.declare_float(ID)
+            print(f"declared float {ID}")
+        elif TYPE == "string":
+            self.memory[ID] = ""
+            # self.generator.declare_str(ID)
+            print(f"declared string {ID}")
+        else:
+            raise Exception(f"unknown type {TYPE}")
 
     # Enter a parse tree produced by ExprParser#assign.
     def enterAssign(self, ctx: ExprParser.AssignContext):
@@ -55,31 +63,36 @@ class ExprListenerImpl(ExprListener):
     def exitAssign(self, ctx: ExprParser.AssignContext):
         ID = ctx.ID().getText()
         # print("exitass", dir(ctx))
-        # print("exitass__", dir(ctx.expr()))
+        print("exitass__", dir(ctx.expr()))
+        print(ID)
 
-        # check if expr has INT
+        if ID not in self.memory:
+            raise ValueError(f"{ID} not declared")
 
         if hasattr(ctx.expr(), "INT"):
             INT = ctx.expr().INT().getText()
-            print(f"ID assign = {ID} = {INT}")
+            print(f"INT assign {ID} = {INT}")
             self.memory[ID] = int(INT)
             self.generator.assign_int(ID, INT)
         elif hasattr(ctx.expr(), "FLOAT"):
             FLOAT = ctx.expr().FLOAT().getText()
-            print(f"ID assign = {ID} = {FLOAT}")
+            print(f"FLOAT assign {ID} = {FLOAT}")
             self.memory[ID] = float(FLOAT)
             self.generator.assign_float(ID, FLOAT)
         elif hasattr(ctx.expr(), "STR"):
             STR = ctx.expr().STR().getText()
-            print(f"ID assign = {ID} = {STR}")
+            print(f"STR assign {ID} = {STR}")
             self.memory[ID] = STR
-            self.generator.declare_str(ID)
-            self.generator.assign_str(ID, STR)
+            STR = STR[1:-1]
+            # self.generator.assign_str(ID, STR)
+            self.generator.declare_static_string(ID, STR)
         elif hasattr(ctx.expr(), "ID"):
             ID_ID = ctx.expr().ID().getText()
             print(f"ID assign = {ID} = {ID_ID}")
             # generator mov by id to id in llvm IR
             self.memory[ID] = self.memory[STR]
+        else:
+            raise Exception(f"variable type not known {ID}")
     # Exit a parse tree produced by ExprParser#arrayDeclaration.
 
     def exitArrayDeclaration(self, ctx: ExprParser.ArrayDeclarationContext):
@@ -118,14 +131,25 @@ class ExprListenerImpl(ExprListener):
     def exitPrint(self, ctx: ExprParser.PrintContext):
         print(f"{ctx.op.type=}")
         # print(f"{ExprParser.FLOAT=}")
-        print("printdir", dir(ctx))
+        # print("printdir", dir(ctx))
 
-        if ctx.INT() != None:
+        if ctx.INT() is not None:
             INT = ctx.INT().getText()
             self.generator.printf_int(INT)
-        elif ctx.ID() != None:
+        elif ctx.ID() is not None:
             ID = ctx.ID().getText()
-            self.generator.printf_id(ID)
+            val = self.memory.get(ID, None)
+            type_ = ctx.op.type
+            print(F"{type_=}")
+            print(F"{self.memory=}")
+            if val is None:
+                raise Exception(f"variable not declared {ID}")
+            elif isinstance(val, int):
+                self.generator.printf_int(ID)
+            elif isinstance(val, float):
+                self.generator.printf_float(ID)
+            elif isinstance(val, str):
+                self.generator.printf_str(ID)
         else:
             raise Exception("unknown print type")
 
