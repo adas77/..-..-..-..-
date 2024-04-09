@@ -36,7 +36,9 @@ class LLVMGenerator():
     def printf_float(self, id_: str):
         self.main_text += f"%{self.tmp} = load float, float* %{id_}\n"
         self.tmp += 1
-        self.main_text += f"%{self.tmp} = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @strf, i32 0, i32 0), float %{self.tmp-1})\n"
+        self.main_text += f"%{self.tmp}  = fpext float %{self.tmp-1} to double\n"
+        self.tmp += 1
+        self.main_text += f"%{self.tmp} = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @strf, i32 0, i32 0), double %{self.tmp-1})\n"
         self.tmp += 1
 
     def scanf(self, id_: str):
