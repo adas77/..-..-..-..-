@@ -5,6 +5,7 @@ import struct
 class Type(Enum):
     INT = "i32",
     DOUBLE = "double",
+    STR = "i8*"
 
 
 class LLVMGenerator():
@@ -27,7 +28,7 @@ class LLVMGenerator():
         self.tmp += 1
 
     def printf_str(self, id_: str, len: int):
-        self.main_text += f"%{self.tmp} = getelementptr inbounds [{len} x i8], [{len} x i8]* @{id_}, i32 0, i32 0\n"
+        self.main_text += f"%{self.tmp} = getelementptr inbounds [{len+1} x i8], [{len+1} x i8]* @{id_}, i32 0, i32 0\n"
         self.tmp += 1
         self.main_text += "%"+str(self.tmp) + " = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @strstr, i32 0, i32 0), i8* %"+str(  # change strp to str argument for others and custom printfs
             self.tmp-1)+")\n"
@@ -110,3 +111,13 @@ class LLVMGenerator():
 
     # def assign_str(self, id_: str, name: str):
     #     self.main_text += f"store i8* %{id_}, i8* %{name}\n"
+
+    def assign_int_to_int(self, id_: str, id2_: str):
+        self.main_text += f"%{self.tmp} = load i32, i32* %{id2_}\n"
+        self.tmp += 1
+        self.main_text += f"store i32 %{self.tmp-1}, i32* %{id_}\n"
+    
+    def assign_double_to_double(self, id_: str, id2_: str):
+        self.main_text += f"%{self.tmp} = load double, double* %{id2_}\n"
+        self.tmp += 1
+        self.main_text += f"store double %{self.tmp-1}, double* %{id_}\n"

@@ -1,11 +1,18 @@
 int i
 double f
+double g
 string s
 i = 2137
 f = 3.14
-f = 4.20
-f = 4.2000001
 s = "Hello world"
 print(i)
 print(f)
 print(s)
+int a
+int b
+a = 1
+b = 2
+a = b
+print(a)
+g = f
+print(g)
