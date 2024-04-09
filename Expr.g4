@@ -2,21 +2,21 @@ grammar Expr;
 r: stat+;
 
 stat:
-	expr NEWLINE											# printExpr
-	| TYPE ID NEWLINE										# declaration
-	| ID '=' expr NEWLINE									# assign
-	| TYPE ID '[' INT ']' NEWLINE							# arrayDeclaration
-	| ID '[' op = (INT | ID) ']' '=' expr NEWLINE			# arrayAssign
-	| 'print' '(' op = (ID | INT | FLOAT | STR) ')' NEWLINE	# print
-	| ID '=' 'read' '(' ')' NEWLINE							# read
-	| NEWLINE												# blank;
+	expr NEWLINE												# printExpr
+	| TYPE ID NEWLINE											# declaration
+	| ID '=' expr NEWLINE										# assign
+	| TYPE ID '[' INT ']' NEWLINE								# arrayDeclaration
+	| ID '[' op = (INT | ID) ']' '=' expr NEWLINE				# arrayAssign
+	| 'print' '(' op = (ID | INT | DOUBLE | STR) ')' NEWLINE	# print
+	| ID '=' 'read' '(' ')' NEWLINE								# read
+	| NEWLINE													# blank;
 //	| '#' COMMENT NEWLINE									# comment;
 
 expr:
 	expr op = ('*' | '/') expr		# MulDiv
 	| expr op = ('+' | '-') expr	# AddSub
 	| INT							# int
-	| FLOAT							# float
+	| DOUBLE						# double
 	| STR							# str
 	| ID							# id
 	| '(' expr ')'					# parens
@@ -24,10 +24,10 @@ expr:
 
 // TODO: arr: '{' val (',' val)* '}' # value;
 
-val: INT | FLOAT;
+val: INT | DOUBLE;
 
 // STR: '"' ID '"';
-TYPE: 'int' | 'float' | 'string';
+TYPE: 'int' | 'double' | 'string';
 MUL: '*'; // assigns token name to '*' used above in grammar
 DIV: '/';
 ADD: '+';
@@ -35,7 +35,7 @@ SUB: '-';
 STR: '"' [a-zA-Z _]+ '"';
 ID: [a-zA-Z]+; // match identifiers
 INT: [0-9]+; // match integers
-FLOAT: [0-9]+ '.' [0-9]+; // match integers
+DOUBLE: [0-9]+ '.' [0-9]+; // match integers
 //COMMENT: [a-zA-Z _]+;
 NEWLINE:
 	'\r'? '\n'

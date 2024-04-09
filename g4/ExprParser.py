@@ -56,7 +56,7 @@ class ExprParser ( Parser ):
     symbolicNames = [ "<INVALID>", "<INVALID>", "<INVALID>", "<INVALID>", 
                       "<INVALID>", "<INVALID>", "<INVALID>", "<INVALID>", 
                       "TYPE", "MUL", "DIV", "ADD", "SUB", "STR", "ID", "INT", 
-                      "FLOAT", "NEWLINE", "WS" ]
+                      "DOUBLE", "NEWLINE", "WS" ]
 
     RULE_r = 0
     RULE_stat = 1
@@ -81,7 +81,7 @@ class ExprParser ( Parser ):
     STR=13
     ID=14
     INT=15
-    FLOAT=16
+    DOUBLE=16
     NEWLINE=17
     WS=18
 
@@ -180,8 +180,8 @@ class ExprParser ( Parser ):
             return self.getToken(ExprParser.ID, 0)
         def INT(self):
             return self.getToken(ExprParser.INT, 0)
-        def FLOAT(self):
-            return self.getToken(ExprParser.FLOAT, 0)
+        def DOUBLE(self):
+            return self.getToken(ExprParser.DOUBLE, 0)
         def STR(self):
             return self.getToken(ExprParser.STR, 0)
 
@@ -598,6 +598,24 @@ class ExprParser ( Parser ):
                 listener.exitAddSub(self)
 
 
+    class DoubleContext(ExprContext):
+
+        def __init__(self, parser, ctx:ParserRuleContext): # actually a ExprParser.ExprContext
+            super().__init__(parser)
+            self.copyFrom(ctx)
+
+        def DOUBLE(self):
+            return self.getToken(ExprParser.DOUBLE, 0)
+
+        def enterRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "enterDouble" ):
+                listener.enterDouble(self)
+
+        def exitRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "exitDouble" ):
+                listener.exitDouble(self)
+
+
     class IdContext(ExprContext):
 
         def __init__(self, parser, ctx:ParserRuleContext): # actually a ExprParser.ExprContext
@@ -638,24 +656,6 @@ class ExprParser ( Parser ):
         def exitRule(self, listener:ParseTreeListener):
             if hasattr( listener, "exitArrayAccess" ):
                 listener.exitArrayAccess(self)
-
-
-    class FloatContext(ExprContext):
-
-        def __init__(self, parser, ctx:ParserRuleContext): # actually a ExprParser.ExprContext
-            super().__init__(parser)
-            self.copyFrom(ctx)
-
-        def FLOAT(self):
-            return self.getToken(ExprParser.FLOAT, 0)
-
-        def enterRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "enterFloat" ):
-                listener.enterFloat(self)
-
-        def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitFloat" ):
-                listener.exitFloat(self)
 
 
     class IntContext(ExprContext):
@@ -700,11 +700,11 @@ class ExprParser ( Parser ):
                 pass
 
             elif la_ == 2:
-                localctx = ExprParser.FloatContext(self, localctx)
+                localctx = ExprParser.DoubleContext(self, localctx)
                 self._ctx = localctx
                 _prevctx = localctx
                 self.state = 54
-                self.match(ExprParser.FLOAT)
+                self.match(ExprParser.DOUBLE)
                 pass
 
             elif la_ == 3:
@@ -830,8 +830,8 @@ class ExprParser ( Parser ):
         def INT(self):
             return self.getToken(ExprParser.INT, 0)
 
-        def FLOAT(self):
-            return self.getToken(ExprParser.FLOAT, 0)
+        def DOUBLE(self):
+            return self.getToken(ExprParser.DOUBLE, 0)
 
         def getRuleIndex(self):
             return ExprParser.RULE_val

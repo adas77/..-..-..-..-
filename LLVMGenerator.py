@@ -1,9 +1,10 @@
 from enum import Enum
 import struct
 
+
 class Type(Enum):
     INT = "i32",
-    FLOAT = "float",
+    DOUBLE = "double",
 
 
 class LLVMGenerator():

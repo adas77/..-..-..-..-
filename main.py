@@ -3,9 +3,6 @@ from antlr4 import FileStream, CommonTokenStream, InputStream, ParseTreeWalker
 from ExprListenerImpl import ExprListenerImpl
 from g4.ExprLexer import ExprLexer
 from g4.ExprParser import ExprParser
-from ExprVisitorImpl import ExprVisitorImpl
-# from g4.ExprListener import ExprListener
-# from VisitorInterp import VisitorInterp
 
 
 def main(argv):
@@ -22,7 +19,7 @@ def main(argv):
 
     tree_str = tree.toStringTree(recog=parser)
     print(tree_str)
-    # print(dir(tree))
+    print(10*"\n")
 
 
 if __name__ == '__main__':

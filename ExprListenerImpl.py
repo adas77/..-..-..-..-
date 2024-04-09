@@ -44,7 +44,7 @@ class ExprListenerImpl(ExprListener):
             self.memory[ID] = int(0)  # just to be sure
             self.generator.declare_int(ID)
             print(f"declared int {ID}")
-        elif TYPE == "float":
+        elif TYPE == "double":
             self.memory[ID] = float(0)
             self.generator.declare_float(ID)
             print(f"declared float {ID}")
@@ -67,6 +67,7 @@ class ExprListenerImpl(ExprListener):
         print(ID)
 
         if ID not in self.memory:
+            print(f"{self.memory=}")
             raise ValueError(f"{ID} not declared")
 
         if hasattr(ctx.expr(), "INT"):
@@ -74,11 +75,11 @@ class ExprListenerImpl(ExprListener):
             print(f"INT assign {ID} = {INT}")
             self.memory[ID] = int(INT)
             self.generator.assign_int(ID, INT)
-        elif hasattr(ctx.expr(), "FLOAT"):
-            FLOAT = ctx.expr().FLOAT().getText()
-            print(f"FLOAT assign {ID} = {FLOAT}")
-            self.memory[ID] = float(FLOAT)
-            self.generator.assign_float(ID, FLOAT)
+        elif hasattr(ctx.expr(), "DOUBLE"):
+            DOUBLE = ctx.expr().DOUBLE().getText()
+            print(f"DOUBLE assign {ID} = {DOUBLE}")
+            self.memory[ID] = float(DOUBLE)
+            self.generator.assign_float(ID, DOUBLE)
         elif hasattr(ctx.expr(), "STR"):
             STR = ctx.expr().STR().getText()
             print(f"STR assign {ID} = {STR}")
@@ -211,12 +212,12 @@ class ExprListenerImpl(ExprListener):
     def exitArrayAccess(self, ctx: ExprParser.ArrayAccessContext):
         pass
 
-    # Enter a parse tree produced by ExprParser#float.
-    def enterFloat(self, ctx: ExprParser.FloatContext):
+    # Enter a parse tree produced by ExprParser#double.
+    def enterDouble(self, ctx: ExprParser.DoubleContext):
         pass
 
-    # Exit a parse tree produced by ExprParser#float.
-    def exitFloat(self, ctx: ExprParser.FloatContext):
+    # Exit a parse tree produced by ExprParser#double.
+    def exitDouble(self, ctx: ExprParser.DoubleContext):
         pass
 
     # Enter a parse tree produced by ExprParser#int.

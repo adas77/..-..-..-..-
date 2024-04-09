@@ -3,6 +3,8 @@ double f
 string s
 i = 2137
 f = 3.14
+f = 4.20
+f = 4.2000001
 s = "Hello world"
 print(i)
 print(f)

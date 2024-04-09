@@ -125,6 +125,15 @@ class ExprListener(ParseTreeListener):
         pass
 
 
+    # Enter a parse tree produced by ExprParser#double.
+    def enterDouble(self, ctx:ExprParser.DoubleContext):
+        pass
+
+    # Exit a parse tree produced by ExprParser#double.
+    def exitDouble(self, ctx:ExprParser.DoubleContext):
+        pass
+
+
     # Enter a parse tree produced by ExprParser#id.
     def enterId(self, ctx:ExprParser.IdContext):
         pass
@@ -140,15 +149,6 @@ class ExprListener(ParseTreeListener):
 
     # Exit a parse tree produced by ExprParser#arrayAccess.
     def exitArrayAccess(self, ctx:ExprParser.ArrayAccessContext):
-        pass
-
-
-    # Enter a parse tree produced by ExprParser#float.
-    def enterFloat(self, ctx:ExprParser.FloatContext):
-        pass
-
-    # Exit a parse tree produced by ExprParser#float.
-    def exitFloat(self, ctx:ExprParser.FloatContext):
         pass
 
 

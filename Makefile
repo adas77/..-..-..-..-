@@ -18,7 +18,7 @@ antlr4:
 	$(ANTLR)
 
 gen:
-	$(ANTLR) -Dlanguage=Python3 -o $(PATH_ANTLR_OUTPUT) Expr.g4
+	$(ANTLR) -Dlanguage=Python3 -o $(PATH_ANTLR_OUTPUT) $(PATH_G4)
 
 run:
 	$(PY) main.py $(PATH_INPUT)
