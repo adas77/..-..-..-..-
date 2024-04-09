@@ -25,11 +25,10 @@ class LLVMGenerator():
             self.tmp-1)+")\n"
         self.tmp += 1
 
-    def printf_str(self, id_: str):
-        self.main_text += f"%{self.tmp} = load i8*, i8** @{id_}\n"
-        # TODO get string pointer and then load it
+    def printf_str(self, id_: str, len: int):
+        self.main_text += f"%{self.tmp} = getelementptr inbounds [{len} x i8], [{len} x i8]* @{id_}, i32 0, i32 0\n"
         self.tmp += 1
-        self.main_text += "%"+str(self.tmp) + " = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([3 x i8], [3 x i8]* @strstr, i32 0, i32 0), i8* %"+str(  # change strp to str argument for others and custom printfs
+        self.main_text += "%"+str(self.tmp) + " = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @strstr, i32 0, i32 0), i8* %"+str(  # change strp to str argument for others and custom printfs
             self.tmp-1)+")\n"
         self.tmp += 1
 
@@ -93,7 +92,7 @@ class LLVMGenerator():
         text += "@strp = constant [4 x i8] c\"%d\\0A\\00\"\n"
         text += "@strf = constant [4 x i8] c\"%f\\0A\\00\"\n"
         text += "@strs = constant [3 x i8] c\"%d\\00\"\n"
-        text += "@strstr = constant [3 x i8] c\"%s\\00\"\n"
+        text += '@strstr = constant [4 x i8] c"%s\\0A\\00"\n'
         text += self.header_text
         text += "define i32 @main() nounwind{\n"
         text += self.main_text

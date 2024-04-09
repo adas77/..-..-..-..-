@@ -82,8 +82,8 @@ class ExprListenerImpl(ExprListener):
         elif hasattr(ctx.expr(), "STR"):
             STR = ctx.expr().STR().getText()
             print(f"STR assign {ID} = {STR}")
-            self.memory[ID] = STR
             STR = STR[1:-1]
+            self.memory[ID] = STR
             # self.generator.assign_str(ID, STR)
             self.generator.declare_static_string(ID, STR)
         elif hasattr(ctx.expr(), "ID"):
@@ -149,7 +149,7 @@ class ExprListenerImpl(ExprListener):
             elif isinstance(val, float):
                 self.generator.printf_float(ID)
             elif isinstance(val, str):
-                self.generator.printf_str(ID)
+                self.generator.printf_str(ID, len(val)+1)
         else:
             raise Exception("unknown print type")
 
