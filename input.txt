@@ -1,8 +1,8 @@
 int i
-float f
+double f
 string s
 i = 2137
-f = 0.5
+f = 3.14
 s = "Hello world"
 print(i)
 print(f)
