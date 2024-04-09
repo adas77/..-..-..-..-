@@ -33,7 +33,7 @@ class LLVMGenerator():
             self.tmp-1)+")\n"
         self.tmp += 1
 
-    def printf_float(self, id_: str):
+    def printf_double(self, id_: str):
         self.main_text += f"%{self.tmp} = load double, double* %{id_}\n"
         self.tmp += 1
         self.main_text += f"%{self.tmp} = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @strf, i32 0, i32 0), double %{self.tmp-1})\n"
@@ -46,14 +46,14 @@ class LLVMGenerator():
     def assign_int(self, id_: str, value: int):
         self.main_text += f"store i32 {value}, i32* %{id_}\n"
 
-    def assign_float(self, id_: str, value: float):
+    def assign_double(self, id_: str, value: float):
         hex_value = struct.pack('>d', float(value)).hex()
         self.main_text += f"store double 0x{hex_value}, double* %{id_}, align 4\n"
 
     def assign_id_int(self, id_: str, id2_: str):
         self.main_text += f"%{id_} = load i32, i32* %{id2_}\n"
 
-    def assign_id_float(self, id_: str, id2_: str):
+    def assign_id_double(self, id_: str, id2_: str):
         self.main_text += f"%{id_} = load i32, i32* %{id2_}\n"
 
     def assign_arr(self, id_: str, type_: Type, size: int, index: int, val):
@@ -82,7 +82,7 @@ class LLVMGenerator():
     def declare_int(self, id_: str):
         self.main_text += f"%{id_} = alloca i32\n"
 
-    def declare_float(self, id_: str):
+    def declare_double(self, id_: str):
         self.main_text += f"%{id_} = alloca double\n"
 
     def generate(self) -> str:

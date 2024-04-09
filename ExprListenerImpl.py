@@ -10,10 +10,30 @@ class ExprListenerImpl(ExprListener):
         self.memory = {}
         self.generator = LLVMGenerator()
 
-    # Enter a parse tree produced by ExprParser#r.
+    def add_variable(self, ID, TYPE, data = None):
+        if self.variable_exists(ID):
+            raise ValueError(f"{ID} already declared")
+        variable_struct = {
+            "TYPE": TYPE,
+            "data": data
+        }
+        self.memory[ID] = variable_struct
+    
+    def remove_variable(self, ID):
+        if not self.variable_exists(ID):
+            raise ValueError(f"{ID} not declared")
+        self.memory.pop(ID)
+    
+    def get_variable(self, ID):
+        if not self.variable_exists(ID):
+            raise ValueError(f"{ID} not declared")
+        return self.memory.get(ID, None)
 
+    def variable_exists(self, ID):
+        return ID in self.memory
+
+    # Enter a parse tree produced by ExprParser#r.
     def enterR(self, ctx: ExprParser.RContext):
-        print("xd")
         pass
 
     # Exit a parse tree produced by ExprParser#r.
@@ -22,12 +42,10 @@ class ExprListenerImpl(ExprListener):
 
     # Enter a parse tree produced by ExprParser#printExpr.
     def enterPrintExpr(self, ctx: ExprParser.PrintExprContext):
-
         pass
 
     # Exit a parse tree produced by ExprParser#printExpr.
     def exitPrintExpr(self, ctx: ExprParser.PrintExprContext):
-        print("xd")
         pass
 
     # Enter a parse tree produced by ExprParser#declaration.
@@ -41,13 +59,15 @@ class ExprListenerImpl(ExprListener):
             raise Exception(f"variable already declared {ID}")
         TYPE = ctx.TYPE().getText()
         if TYPE == "int":
+
             self.memory[ID] = int(0)  # just to be sure
+            
             self.generator.declare_int(ID)
             print(f"declared int {ID}")
         elif TYPE == "double":
             self.memory[ID] = float(0)
-            self.generator.declare_float(ID)
-            print(f"declared float {ID}")
+            self.generator.declare_double(ID)
+            print(f"declared double {ID}")
         elif TYPE == "string":
             self.memory[ID] = ""
             # self.generator.declare_str(ID)
@@ -67,7 +87,6 @@ class ExprListenerImpl(ExprListener):
         print(ID)
 
         if ID not in self.memory:
-            print(f"{self.memory=}")
             raise ValueError(f"{ID} not declared")
 
         if hasattr(ctx.expr(), "INT"):
@@ -79,7 +98,7 @@ class ExprListenerImpl(ExprListener):
             DOUBLE = ctx.expr().DOUBLE().getText()
             print(f"DOUBLE assign {ID} = {DOUBLE}")
             self.memory[ID] = float(DOUBLE)
-            self.generator.assign_float(ID, DOUBLE)
+            self.generator.assign_double(ID, DOUBLE)
         elif hasattr(ctx.expr(), "STR"):
             STR = ctx.expr().STR().getText()
             print(f"STR assign {ID} = {STR}")
@@ -112,7 +131,7 @@ class ExprListenerImpl(ExprListener):
 
         # ops = {
         #     ExprParser.INT: ctx.INT(),
-        #     ExprParser.FLOAT: ctx.FLOAT(),
+        #     ExprParser.DOUBLE: ctx.DOUBLE(),
         #     ExprParser.STR: ctx.STR(),
         #     ExprParser.ID: None if not hasattr(ctx.ID(), "getText") else
         #     self.memory.get(
@@ -131,7 +150,7 @@ class ExprListenerImpl(ExprListener):
     # Exit a parse tree produced by ExprParser#print.
     def exitPrint(self, ctx: ExprParser.PrintContext):
         print(f"{ctx.op.type=}")
-        # print(f"{ExprParser.FLOAT=}")
+        # print(f"{ExprParser.DOUBLE=}")
         # print("printdir", dir(ctx))
 
         if ctx.INT() is not None:
@@ -148,7 +167,7 @@ class ExprListenerImpl(ExprListener):
             elif isinstance(val, int):
                 self.generator.printf_int(ID)
             elif isinstance(val, float):
-                self.generator.printf_float(ID)
+                self.generator.printf_double(ID)
             elif isinstance(val, str):
                 self.generator.printf_str(ID, len(val)+1)
         else:
