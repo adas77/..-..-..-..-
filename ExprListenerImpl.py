@@ -1,6 +1,7 @@
 from g4.ExprListener import ExprListener
 from g4.ExprParser import ExprParser
 from LLVMGenerator import LLVMGenerator
+from uuid import uuid4
 # from g4.ExprParser import ExprParser
 # This class defines a complete listener for a parse tree produced by ExprParser.
 
@@ -13,7 +14,6 @@ class ExprListenerImpl(ExprListener):
     # Enter a parse tree produced by ExprParser#r.
 
     def enterR(self, ctx: ExprParser.RContext):
-        print("xd")
         pass
 
     # Exit a parse tree produced by ExprParser#r.
@@ -22,12 +22,10 @@ class ExprListenerImpl(ExprListener):
 
     # Enter a parse tree produced by ExprParser#printExpr.
     def enterPrintExpr(self, ctx: ExprParser.PrintExprContext):
-
         pass
 
     # Exit a parse tree produced by ExprParser#printExpr.
     def exitPrintExpr(self, ctx: ExprParser.PrintExprContext):
-        print("xd")
         pass
 
     # Enter a parse tree produced by ExprParser#declaration.
@@ -62,12 +60,8 @@ class ExprListenerImpl(ExprListener):
     # Exit a parse tree produced by ExprParser#assign.
     def exitAssign(self, ctx: ExprParser.AssignContext):
         ID = ctx.ID().getText()
-        # print("exitass", dir(ctx))
-        print("exitass__", dir(ctx.expr()))
-        print(ID)
 
         if ID not in self.memory:
-            print(f"{self.memory=}")
             raise ValueError(f"{ID} not declared")
 
         if hasattr(ctx.expr(), "INT"):
@@ -92,12 +86,22 @@ class ExprListenerImpl(ExprListener):
             print(f"ID assign = {ID} = {ID_ID}")
             # generator mov by id to id in llvm IR
             self.memory[ID] = self.memory[STR]
+        elif hasattr(ctx.expr(), "DIV") or hasattr(ctx.expr(), "MUL"):
+            pass
+        elif hasattr(ctx.expr(), "SUB") or hasattr(ctx.expr(), "ADD"):
+            pass
         else:
             raise Exception(f"variable type not known {ID}")
     # Exit a parse tree produced by ExprParser#arrayDeclaration.
 
     def exitArrayDeclaration(self, ctx: ExprParser.ArrayDeclarationContext):
-        pass
+        ID = ctx.ID().getText()
+        SIZE = int(ctx.INT().getText())
+        TYPE = ctx.TYPE().getText()
+        self.memory[ID] = (
+            [.0 if TYPE == "double" else 0 for _ in range(SIZE)], TYPE)
+        TYPE_GEN = "i32" if TYPE == "int" else TYPE
+        self.generator.declare_arr(ID, TYPE_GEN, SIZE)
 
     # Enter a parse tree produced by ExprParser#arrayAssign.
     def enterArrayAssign(self, ctx: ExprParser.ArrayAssignContext):
@@ -105,44 +109,37 @@ class ExprListenerImpl(ExprListener):
 
     # Exit a parse tree produced by ExprParser#arrayAssign.
     def exitArrayAssign(self, ctx: ExprParser.ArrayAssignContext):
-        pass
+        ID = ctx.ID(0).getText()
+        index = int(self.memory.get(
+            ctx.ID(1).getText()) if ctx.op.type == ExprParser.ID else ctx.INT().getText())
+
+        update, TYPE = self.memory.get(ID, None)
+        if not update:
+            raise ValueError(f"Array with ID: {ID} is not declared")
+        # TODO handle more than: INT | DOUBLE
+        if not hasattr(ctx.expr(), f"{TYPE}".upper()):
+            raise ValueError(
+                f"Array with ID: {ID} stores only {TYPE} type variables")
+        val = int(ctx.expr().INT().getText()) if TYPE == "int" else float(
+            ctx.expr().DOUBLE().getText())
+        update[index] = val
+        self.memory[ID] = (update, TYPE)
+        TYPE_GEN = "i32" if TYPE == "int" else TYPE
+        self.generator.assign_arr(ID, TYPE_GEN, len(update), index, val)
 
     # Enter a parse tree produced by ExprParser#print.
+
     def enterPrint(self, ctx: ExprParser.PrintContext):
-
-        # ops = {
-        #     ExprParser.INT: ctx.INT(),
-        #     ExprParser.FLOAT: ctx.FLOAT(),
-        #     ExprParser.STR: ctx.STR(),
-        #     ExprParser.ID: None if not hasattr(ctx.ID(), "getText") else
-        #     self.memory.get(
-        #         ctx.ID().getText(), None)
-        # }
-        # v = ops.get(ctx.op.type, None)
-        # v = v if v is None or isinstance(v, (str, list)) else v.getText()
-
-        # # print("ctx", dir(ctx))
-
-        # print(ctx.getText())
-        # self.generator.printf()
-        # print(f"{v=}")
         pass
 
     # Exit a parse tree produced by ExprParser#print.
     def exitPrint(self, ctx: ExprParser.PrintContext):
-        print(f"{ctx.op.type=}")
-        # print(f"{ExprParser.FLOAT=}")
-        # print("printdir", dir(ctx))
-
         if ctx.INT() is not None:
             INT = ctx.INT().getText()
             self.generator.printf_int(INT)
         elif ctx.ID() is not None:
             ID = ctx.ID().getText()
             val = self.memory.get(ID, None)
-            type_ = ctx.op.type
-            print(F"{type_=}")
-            print(F"{self.memory=}")
             if val is None:
                 raise Exception(f"variable not declared {ID}")
             elif isinstance(val, int):
@@ -182,13 +179,20 @@ class ExprListenerImpl(ExprListener):
 
     # Enter a parse tree produced by ExprParser#MulDiv.
     def enterMulDiv(self, ctx: ExprParser.MulDivContext):
+
         pass
 
     # Exit a parse tree produced by ExprParser#MulDiv.
     def exitMulDiv(self, ctx: ExprParser.MulDivContext):
-        pass
+        # FIXME
+        def parse(x):
+            return float(x) if hasattr(
+                ctx.expr(0), "DOUBLE") or hasattr(ctx.expr(1), "DOUBLE") else int(x)
+        left = ctx.expr(0).getText()
+        right = ctx.expr(1).getText()
 
     # Enter a parse tree produced by ExprParser#AddSub.
+
     def enterAddSub(self, ctx: ExprParser.AddSubContext):
         pass
 
@@ -210,7 +214,34 @@ class ExprListenerImpl(ExprListener):
 
     # Exit a parse tree produced by ExprParser#arrayAccess.
     def exitArrayAccess(self, ctx: ExprParser.ArrayAccessContext):
-        pass
+        id_ = ctx.ID(0).getText()
+        index = int(self.memory.get(
+            ctx.ID(1).getText(), None) if ctx.op.type == ExprParser.ID else ctx.INT().getText())
+        if not index:
+            raise ValueError(
+                f"There is no variable with ID: {ctx.ID().getText(1)}")
+        arr, type_ = self.memory.get(id_, None)
+        size = len(arr)
+
+        if index >= size:
+            raise ValueError(f"index {index} out of bounds")
+
+        if not arr:
+            raise ValueError(
+                f"There is no arr with ID: {id_}")
+        # TODO:
+        # FIXME: hardcoded
+        id_new = ''.join([char for char in f"{uuid4()}" if char not in "-"])
+
+        TYPE_GEN = "i32" if type_ == "int" else type_
+        id_new_print = self.generator.access_arr(
+            index, id_, id_new, size, TYPE_GEN)
+
+        # FIXME: remove this - only for testing
+        if TYPE_GEN == "i32":
+            self.generator.printf_int(id_new_print)
+        else:
+            self.generator.printf_float(id_new_print)
 
     # Enter a parse tree produced by ExprParser#double.
     def enterDouble(self, ctx: ExprParser.DoubleContext):
@@ -235,6 +266,3 @@ class ExprListenerImpl(ExprListener):
     # Exit a parse tree produced by ExprParser#val.
     def exitVal(self, ctx: ExprParser.ValContext):
         pass
-
-
-del ExprParser

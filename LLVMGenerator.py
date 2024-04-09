@@ -57,27 +57,18 @@ class LLVMGenerator():
         self.main_text += f"%{id_} = load i32, i32* %{id2_}\n"
 
     def assign_arr(self, id_: str, type_: Type, size: int, index: int, val):
-        # %newValue = ...
-        # store i32 %newValue, i32* getelementptr inbounds ([5 x i32], [5 x i32]* @myArray, i32 0, i32 <index>)
-        try:
-
-            val = int(val) if type_ == Type.INT else float(val)
-        except:
-            raise ValueError("")
-        self.main_text += f"store {type_} %{val} getelementptr ibounds ([{size} x {type_}], [{size} x {type_}]* @{id_}, {type_} 0, {type_} {index})"
+        self.main_text += f"%{self.tmp} = getelementptr inbounds [{size} x {type_}], [{size} x {type_}]* %{id_}, i32 0, i32 {index}\n"
+        self.main_text += f"store {type_} {val}, {type_}* %{self.tmp}\n"
+        self.tmp += 1
 
     def declare_arr(self, id_: str, type_: Type, size: int):
-        init_val = 0 if type_ == Type.INT else .0
-        arr = ', '.join([f"{type_} {init_val}" for _ in range(size)])
-        self.main_text += f"@{id_} = constant [{size} x {type_}] [{arr}]"
+        self.main_text += f"%{id_} = alloca [{size} x {type_}], align 8\n"
 
-    def access_arr(self):
-        # define i32 @accessArrayElement(i32* %arr) {
-        # %elementPtr = getelementptr i32, i32* %arr, i64 2
-        # %value = load i32, i32* %elementPtr
-        # ret i32 %value
-        # }
-        self.main_text += f""
+    def access_arr(self, index: int, id_: str, id_new: str, size: int, type_: Type) -> str:
+        self.main_text += f"%{self.tmp} = getelementptr inbounds [{size} x {type_}], [{size} x {type_}]* %{id_}, i32 0, i32 {index}\n"
+        # self.main_text += f"%{id_new} = load {type_}, {type_}* %{self.tmp}\n"
+        self.tmp += 1
+        return self.tmp-1  # FIXME: remove this, only for testing
 
     def declare_int(self, id_: str):
         self.main_text += f"%{id_} = alloca i32\n"

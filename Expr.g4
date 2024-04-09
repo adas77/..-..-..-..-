@@ -10,7 +10,7 @@ stat:
 	| 'print' '(' op = (ID | INT | DOUBLE | STR) ')' NEWLINE	# print
 	| ID '=' 'read' '(' ')' NEWLINE								# read
 	| NEWLINE													# blank;
-//	| '#' COMMENT NEWLINE									# comment;
+// | '#' expr NEWLINE											# comment;
 
 expr:
 	expr op = ('*' | '/') expr		# MulDiv

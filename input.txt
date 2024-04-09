@@ -1,6 +1,15 @@
 int i
 double f
 string s
+i = 1
+double arr [3]
+int arrr [6]
+arrr[2]=11
+arrr[2]
+arrr[5]
+arr[1]=4.20691
+arr[i]
+arr[2]
 i = 2137
 f = 3.14
 f = 4.20
