@@ -6,7 +6,7 @@ stat:
 	| TYPE ID '[' INT ']'					# arrayDeclaration
 	| ID '[' arrayIndexExpr ']' '=' expr	# arrayAssign
 	| 'print' '(' value ')'					# print
-	| ID '=' 'read' '(' ')'					# read
+	| 'read' '(' ID ')'						# read
 	| ID '=' '{' expr (',' expr)* '}'		# structAssign
 	| ID '.' structField '=' expr			# structFieldAssign
 	| COMMENT_SINGLELINE					# comment;
@@ -24,7 +24,7 @@ structField: ID;
 arrayIndexExpr: expr;
 
 term:
-	factor								# singleFactor
+	factor							# singleFactor
 	| factor op = ('*' | '/') term	# mulDiv;
 factor: value | '(' expr ')';
 

@@ -44,11 +44,14 @@ class LLVMGenerator():
         self.tmp += 1
 
     def printf_double(self, id_: str):
-        self.main_text += f"%{self.tmp} = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @strf, i32 0, i32 0), double {id_})\n"
+        self.main_text += f"%{self.tmp} = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([5 x i8], [5 x i8]* @strlfn, i32 0, i32 0), double {id_})\n"
         self.tmp += 1
 
-    def scanf(self, id_: str):
-        self.main_text += f"%{self.tmp} = call i32 (i8*, ...) @__isoc99_scanf(i8* getelementptr inbounds ([3 x i8], [3 x i8]* @strs, i32 0, i32 0), i32* %{self.id_}\n"
+    def scanf(self,id_:str,type_:Type):
+        if type_ == Type.INT:
+            self.main_text += f"%{self.tmp} = call i32 (i8*, ...) @__isoc99_scanf(i8* getelementptr inbounds ([3 x i8], [3 x i8]* @strs, i32 0, i32 0),i32* {id_})\n"
+        elif type_ == Type.DOUBLE:
+            self.main_text += f"%{self.tmp} = call i32 (i8*, ...) @__isoc99_scanf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @strlf, i32 0, i32 0),double* {id_})\n"
         self.tmp += 1
     
     def assign_int_anonymous(self, value: int)->str:
@@ -114,7 +117,8 @@ class LLVMGenerator():
         text += "declare i32 @printf(i8*, ...)\n"
         text += "declare i32 @__isoc99_scanf(i8*, ...)\n"
         text += "@strp = constant [4 x i8] c\"%d\\0A\\00\"\n"
-        text += "@strf = constant [4 x i8] c\"%f\\0A\\00\"\n"
+        text += "@strlf = constant [4 x i8] c\"%lf\\00\"\n"
+        text += "@strlfn = constant [5 x i8] c\"%lf\\0A\\00\"\n"
         text += "@strs = constant [3 x i8] c\"%d\\00\"\n"
         text += '@strstr = constant [4 x i8] c"%s\\0A\\00"\n'
         text += self.header_text
@@ -184,7 +188,7 @@ class LLVMGenerator():
             self.assign_int(id_,value_[0])
         elif value_[1] == Type.DOUBLE:
             self.assign_double(id_,value_[0])
-    
+
     def load(self,id_:str,type_:Type):
         type_ = type_.value[0]
         self.main_text += f"%{self.tmp} = load {type_}, {type_}* {id_}\n"

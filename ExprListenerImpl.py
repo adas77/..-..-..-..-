@@ -93,7 +93,10 @@ class ExprListenerImpl(ExprListener):
 
     # Exit a parse tree produced by ExprParser#read.
     def exitRead(self, ctx:ExprParser.ReadContext):
-        pass
+        ID = ctx.ID().getText()
+        (global_char, id_, variable) = self.get_variable(ID)
+        type_ = variable["type_"]
+        self.generator.scanf(global_char+ id_, type_)
 
 
     # Enter a parse tree produced by ExprParser#structAssign.
