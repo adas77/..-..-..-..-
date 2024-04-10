@@ -59,7 +59,8 @@ ADD: '+';
 SUB: '-';
 STR: '"' ( ~('\\' | '"'))* '"';
 
-ID: ([a-zA-Z][a-zA-Z0-9]*) | ([a-zA-Z0-9][a-zA-Z]+);
+ID: ([a-zA-Z][a-zA-Z0-9]*);
+
 INT: [-]? [0-9]+;
 DOUBLE: [-]? [0-9]* '.' [0-9]+;
 COMMENT_SINGLELINE: '#' ~[\n]*;
