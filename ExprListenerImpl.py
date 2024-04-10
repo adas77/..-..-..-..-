@@ -30,7 +30,13 @@ class ExprListenerImpl(ExprListener):
         (val_name, val_type) = self.memory.stack.pop()
         (global_char, id_, variable) = self.set_variable(ID, val_type, TYPE is not None)
         if val_type != variable['type_']:
-            raise ValueError(f"Types: {val_type} must match {TYPE}")   
+            if variable['locked_type']:
+                raise ValueError(f"LockeType Types: {val_type} must match {variable['type_']}")
+            else:
+                # del self.memory.local_variables[ID]
+                # (global_char, id_, variable) = self.set_variable(ID, val_type, TYPE is not None)
+        
+                raise Exception("variable type change not implemented")  
         self.generator.assign(global_char+id_, (val_name, val_type))
 
     # Enter a parse tree produced by ExprParser#arrayDeclaration.
@@ -70,7 +76,8 @@ class ExprListenerImpl(ExprListener):
                 self.generator.printf_int(val_name)
                 # self.generator.printf_int(global_char + id_)
             elif type_ == Type.DOUBLE:
-                self.generator.printf_double(ID)
+                (val_name, val_type) = self.memory.stack.pop()
+                self.generator.printf_double(val_name)
             elif type_ == Type.STR:
                 self.generator.printf_str(ID, variable["data"]["length"])
         else:
@@ -175,7 +182,10 @@ class ExprListenerImpl(ExprListener):
 
     # Exit a parse tree produced by ExprParser#double.
     def exitDouble(self, ctx:ExprParser.DoubleContext):
-        pass
+        DOUBLE = ctx.DOUBLE().getText()
+        anon_id = self.generator.assign_anonymous(float(DOUBLE), Type.DOUBLE)
+        anon_id = self.generator.load(anon_id,Type.DOUBLE)
+        self.memory.stack.append((anon_id,Type.DOUBLE))
 
 
     # Enter a parse tree produced by ExprParser#id.
@@ -382,8 +392,8 @@ class ExprListenerImpl(ExprListener):
 
     # Exit a parse tree produced by ExprParser#mulDiv.
     def exitMulDiv(self, ctx:ExprParser.MulDivContext):
-        l:tuple[str, Type] = self.memory.stack.pop()
         r:tuple[str, Type] = self.memory.stack.pop()
+        l:tuple[str, Type] = self.memory.stack.pop()
         l_id,l_type =l
         r_id,r_type =r
         if l_type != r_type:

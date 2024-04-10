@@ -1,5 +1,6 @@
 hello = "Dobry den"
 print(hello)
+
 struct data
 int a
 double b

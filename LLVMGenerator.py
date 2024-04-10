@@ -33,11 +33,6 @@ class LLVMGenerator():
             f.write(self.generate())
 
     def printf_int(self, id_: str):
-        # self.main_text += f"%{self.tmp} = load i32, i32* {id_}\n"
-        # self.main_text += "%"+self.tmp+" = load i32, i32* %"+id_+"\n"
-        # self.tmp += 1
-        #self.main_text += "%"+str(self.tmp) + " = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @strp, i32 0, i32 0), i32 %"+str(  # change strp to str argument for others and custom printfs
-        #    self.tmp-1)+")\n"
         self.main_text += f"%{self.tmp} = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @strp, i32 0, i32 0), i32 {id_})\n"
         self.tmp += 1
 
@@ -49,9 +44,7 @@ class LLVMGenerator():
         self.tmp += 1
 
     def printf_double(self, id_: str):
-        self.main_text += f"%{self.tmp} = load double, double* %{id_}\n"
-        self.tmp += 1
-        self.main_text += f"%{self.tmp} = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @strf, i32 0, i32 0), double %{self.tmp-1})\n"
+        self.main_text += f"%{self.tmp} = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @strf, i32 0, i32 0), double {id_})\n"
         self.tmp += 1
 
     def scanf(self, id_: str):
@@ -68,15 +61,18 @@ class LLVMGenerator():
         type_ = type_.value[0]
         self.main_text += f"%{self.tmp} = alloca {type_}\n"
         self.tmp += 1
-        self.main_text += f"store {type_} {value}, {type_}* %{self.tmp-1}\n"
+        if type_ == Type.DOUBLE:
+            hex_value = struct.pack('>d', float(value)).hex()
+            self.main_text += f"store double 0x{hex_value}, double* %{self.tmp-1}, align 4\n"
+        else:
+            self.main_text += f"store {type_} {value}, {type_}* %{self.tmp-1}\n"
         return f"%{self.tmp-1}"
 
     def assign_int(self, id_: str, value: int):
         self.main_text += f"store i32 {value}, i32* {id_}\n"
 
     def assign_double(self, id_: str, value: float):
-        hex_value = struct.pack('>d', float(value)).hex()
-        self.main_text += f"store double 0x{hex_value}, double* {id_}, align 4\n"
+         self.main_text += f"store double {value}, double* {id_}\n"
 
     def assign_id_int(self, id_: str, id2_: str):
         self.main_text += f"%{id_} = load i32, i32* %{id2_}\n"
@@ -169,14 +165,16 @@ class LLVMGenerator():
         return f"%{self.tmp-1}"
 
     def div(self,id_1: str, id_2: str,type_:Type)->str:
-        type_ = type_.value[0]
+        
         ops = {
-            "doulbe":"fdiv",
-            "int":"sdiv",
+            Type.DOUBLE:"fdiv",
+            Type.INT:"sdiv",
         }
-        div = ops(type_,None)
+        print(f"Type: {type_} ops: {ops}")
+        div = ops.get(type_,None)
         if div is None:
             raise ValueError(f"Type {type_} is not supported")
+        type_ = type_.value[0]
         self.main_text += f"%{self.tmp} = {div} {type_} {id_1}, {id_2}\n"
         self.tmp+=1
         return f"%{self.tmp-1}"
@@ -194,9 +192,10 @@ class LLVMGenerator():
         return f"%{self.tmp-1}"
     
     def declare_variable(self, id_:str, type_:Type, is_global:bool)->str:
+        zero = '0' if type_ == Type.INT else '0.0'
         type_ = type_.value[0]
         if is_global:
-            self.header_text += f"@{id_} = global {type_} 0\n"
+            self.header_text += f"@{id_} = global {type_} {zero}\n"
             return f'@{id_}'
         else:
             self.main_text += f"%{id_} = alloca {type_}\n"
