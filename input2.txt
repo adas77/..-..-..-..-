@@ -10,7 +10,7 @@ d = {0, 3.14}
 fn load_data()
   int a
   read(a)
-  if a < 0
+  if a * -1
   a = 10
   fi
   d.a = a

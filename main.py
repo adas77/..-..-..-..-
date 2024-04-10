@@ -19,7 +19,7 @@ def main(argv):
 
     tree_str = tree.toStringTree(recog=parser)
     print(tree_str)
-    print(10*"\n")
+    print(2*"\n")
 
 
 if __name__ == '__main__':

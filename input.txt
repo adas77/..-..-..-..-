@@ -1,20 +1,7 @@
-int i
-double f
-double g
-string s
-i = 2137
-f = 3.14
-s = "Hello world"
-print(i)
-print(f)
-print(s)
-int a
-int b
-a = 1
-b = 2
-a = b
+int a = 1
 print(a)
-g = f
-print(g)
-# print(g)
-print(s)
+a = a + 1999999999999999999999999999999999999999999999999
+print(a)
+
+
+

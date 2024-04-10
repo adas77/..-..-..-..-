@@ -1,29 +1,20 @@
 from g4.ExprListener import ExprListener
 from g4.ExprParser import ExprParser
 from LLVMGenerator import LLVMGenerator, Type
+from Memory import Memory, VarType
 
 class ExprListenerImpl(ExprListener):
     def __init__(self):
-        self.memory = {}
+        self.memory = Memory()
         self.generator = LLVMGenerator()
-
+        
     # Enter a parse tree produced by ExprParser#r.
     def enterR(self, ctx:ExprParser.RContext):
         pass
 
     # Exit a parse tree produced by ExprParser#r.
     def exitR(self, ctx:ExprParser.RContext):
-        pass
-
-
-    # Enter a parse tree produced by ExprParser#declaration.
-    def enterDeclaration(self, ctx:ExprParser.DeclarationContext):
-        pass
-
-    # Exit a parse tree produced by ExprParser#declaration.
-    def exitDeclaration(self, ctx:ExprParser.DeclarationContext):
-        pass
-
+        self.generator.save()
 
     # Enter a parse tree produced by ExprParser#assign.
     def enterAssign(self, ctx:ExprParser.AssignContext):
@@ -31,8 +22,16 @@ class ExprListenerImpl(ExprListener):
 
     # Exit a parse tree produced by ExprParser#assign.
     def exitAssign(self, ctx:ExprParser.AssignContext):
-        pass
-
+        TYPE = ctx.TYPE()
+        if TYPE is not None:
+            TYPE = TYPE.getText()
+            TYPE = Type.map_(TYPE)
+        ID = ctx.ID().getText()
+        (val_name, val_type) = self.memory.stack.pop()
+        (global_char, id_, variable) = self.set_variable(ID, val_type, TYPE is not None)
+        if val_type != variable['type_']:
+            raise ValueError(f"Types: {val_type} must match {TYPE}")   
+        self.generator.assign(global_char+id_, (val_name, val_type))
 
     # Enter a parse tree produced by ExprParser#arrayDeclaration.
     def enterArrayDeclaration(self, ctx:ExprParser.ArrayDeclarationContext):
@@ -58,6 +57,26 @@ class ExprListenerImpl(ExprListener):
 
     # Exit a parse tree produced by ExprParser#print.
     def exitPrint(self, ctx:ExprParser.PrintContext):
+        ctx = ctx.value()
+        if hasattr(ctx, "INT"):
+            (val_name, val_type) = self.memory.stack.pop()
+            self.generator.printf_int(val_name)
+        elif hasattr(ctx, "ID"):
+            ID = ctx.ID().getText()
+            (global_char, id_, variable) = self.get_variable(ID)
+            type_ = variable["type_"]
+            if type_ == Type.INT:
+                (val_name, val_type) = self.memory.stack.pop()
+                self.generator.printf_int(val_name)
+                # self.generator.printf_int(global_char + id_)
+            elif type_ == Type.DOUBLE:
+                self.generator.printf_double(ID)
+            elif type_ == Type.STR:
+                self.generator.printf_str(ID, variable["data"]["length"])
+        else:
+            raise Exception("unknown print type")
+
+        print(self.memory)
         pass
 
 
@@ -103,7 +122,32 @@ class ExprListenerImpl(ExprListener):
 
     # Exit a parse tree produced by ExprParser#addSub.
     def exitAddSub(self, ctx:ExprParser.AddSubContext):
-        pass
+        # print(2*"\n","exitAddSub")
+        # print(f"{dir(ctx)}")
+        # print(f"{dir(ctx.term)}")
+
+        # TODO: Chceck muldiv
+        
+        # if ctx.term() is not None:
+
+
+        # 
+        # ``
+
+
+        l:tuple[str, Type] = self.memory.stack.pop()
+        r:tuple[str, Type] = self.memory.stack.pop()
+        l_id,l_type =l
+        r_id,r_type =r
+        if l_type != r_type:
+            raise ValueError(f"Types: {l_type} must match {r_type}")
+        
+        type_=l_type
+        fn = self.generator.add if ctx.op.type == ExprParser.ADD else self.generator.sub
+
+        anon_id = fn(l_id,r_id,type_)
+        self.memory.stack.append((anon_id,type_))
+        
 
 
     # Enter a parse tree produced by ExprParser#single.
@@ -114,6 +158,50 @@ class ExprListenerImpl(ExprListener):
     def exitSingle(self, ctx:ExprParser.SingleContext):
         pass
 
+    # Enter a parse tree produced by ExprParser#int.
+    def enterInt(self, ctx:ExprParser.IntContext):
+        pass
+
+    # Exit a parse tree produced by ExprParser#int.
+    def exitInt(self, ctx:ExprParser.IntContext):
+        INT = ctx.INT().getText()
+        anon_id = self.generator.assign_int_anonymous(int(INT))
+        anon_id = self.generator.load(anon_id,Type.INT)
+        self.memory.stack.append((anon_id,Type.INT))
+
+    # Enter a parse tree produced by ExprParser#double.
+    def enterDouble(self, ctx:ExprParser.DoubleContext):
+        pass
+
+    # Exit a parse tree produced by ExprParser#double.
+    def exitDouble(self, ctx:ExprParser.DoubleContext):
+        pass
+
+
+    # Enter a parse tree produced by ExprParser#id.
+    def enterId(self, ctx:ExprParser.IdContext):
+        pass
+
+    # Exit a parse tree produced by ExprParser#id.
+    def exitId(self, ctx:ExprParser.IdContext):
+        ID = ctx.ID().getText()
+        (global_char, id_, variable) = self.get_variable(ID)
+        type_ = variable["type_"]
+        anon_id = ''
+        if type_ == Type.INT:
+            anon_id = self.generator.load(global_char+id_,Type.INT)
+        elif type_ == Type.DOUBLE:
+            anon_id = self.generator.load(global_char+id_,Type.DOUBLE)
+        self.memory.stack.append((anon_id,type_))
+
+
+    # Enter a parse tree produced by ExprParser#str.
+    def enterStr(self, ctx:ExprParser.StrContext):
+        pass
+
+    # Exit a parse tree produced by ExprParser#str.
+    def exitStr(self, ctx:ExprParser.StrContext):
+        pass
 
     # Enter a parse tree produced by ExprParser#arrayAccess.
     def enterArrayAccess(self, ctx:ExprParser.ArrayAccessContext):
@@ -248,3 +336,61 @@ class ExprListenerImpl(ExprListener):
     # Exit a parse tree produced by ExprParser#value.
     def exitValue(self, ctx:ExprParser.ValueContext):
         pass
+
+    def set_variable(self, id_:str, assign_type:Type, locked_type:bool = False):
+        final_id:tuple[str,str, object] = ''
+        if self.memory.global_context:
+            variable = self.memory.global_variables.get(id_, None)
+            if variable is None:
+                self.memory.add_variable(id_, assign_type, VarType.GLOBAL_VAR, locked_type)
+                self.generator.declare_variable(id_, assign_type, is_global=True)
+                variable = self.memory.global_variables.get(id_, None)
+            else:
+                if variable['locked_type']:
+                    if variable['type_'] != assign_type:
+                        raise ValueError(f"Types: {variable['type_']} must match {assign_type}")
+            
+            final_id = ('@',id_, variable)
+        else:
+            variable = self.memory.local_variables.get(id_, None)
+            if variable is None:
+                # self.memory.add_variable(id_,type_,var_type,locked_type,data)
+
+                self.memory.add_variable(id_, assign_type, VarType.LOCAL_VAR, locked_type)
+                self.generator.declare_variable(id_, assign_type, is_global=False)
+                variable = self.memory.local_variables.get(id_, None)
+            else:
+                if variable['locked_type']:
+                    if variable['type_'] != assign_type:
+                        raise ValueError(f"Types: {variable['type_']} must match {assign_type}")
+            final_id = ('%',id_, variable)
+        return final_id
+    
+    def get_variable(self, id_:str):
+        final_id:tuple[str,str, object] = None
+        if self.memory.local_variables.get(id_, None) is not None:
+            final_id = ('%',id_, self.memory.local_variables.get(id_, None))
+        elif self.memory.global_variables.get(id_, None) is not None:
+            final_id = ('@',id_, self.memory.global_variables.get(id_, None))
+        else:
+            raise ValueError(f"{id_} not found")
+        return final_id
+    
+    # Enter a parse tree produced by ExprParser#mulDiv.
+    def enterMulDiv(self, ctx:ExprParser.MulDivContext):
+        pass
+
+    # Exit a parse tree produced by ExprParser#mulDiv.
+    def exitMulDiv(self, ctx:ExprParser.MulDivContext):
+        l:tuple[str, Type] = self.memory.stack.pop()
+        r:tuple[str, Type] = self.memory.stack.pop()
+        l_id,l_type =l
+        r_id,r_type =r
+        if l_type != r_type:
+            raise ValueError(f"Types: {l_type} must match {r_type}")
+        
+        type_=l_type
+        fn = self.generator.mul if ctx.op.type == ExprParser.MUL else self.generator.div
+
+        anon_id = fn(l_id,r_id,type_)
+        self.memory.stack.append((anon_id,type_))

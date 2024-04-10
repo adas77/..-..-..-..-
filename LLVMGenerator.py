@@ -7,12 +7,25 @@ class Type(Enum):
     DOUBLE = "double",
     STR = "i8*"
 
+    def map_(type_:str):
+        types_mappings = {
+            "int":Type.INT,
+            "double":Type.DOUBLE,
+            "string":Type.STR,
+        }
+        res = types_mappings.get(type_,None)
+        if res is None:
+            raise ValueError(f"{type_} is not a valid type") 
+        return res
 
 class LLVMGenerator():
     def __init__(self, file_path: str = "./code.ll"):
         self.file_path = file_path
         self.main_text = ""
         self.tmp = 1
+        self.main_tmp = 1
+        self.br = 0
+        self.br_stack = []
         self.header_text = ""
 
     def save(self):
@@ -20,11 +33,12 @@ class LLVMGenerator():
             f.write(self.generate())
 
     def printf_int(self, id_: str):
-        self.main_text += f"%{self.tmp} = load i32, i32* %{id_}\n"
+        # self.main_text += f"%{self.tmp} = load i32, i32* {id_}\n"
         # self.main_text += "%"+self.tmp+" = load i32, i32* %"+id_+"\n"
-        self.tmp += 1
-        self.main_text += "%"+str(self.tmp) + " = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @strp, i32 0, i32 0), i32 %"+str(  # change strp to str argument for others and custom printfs
-            self.tmp-1)+")\n"
+        # self.tmp += 1
+        #self.main_text += "%"+str(self.tmp) + " = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @strp, i32 0, i32 0), i32 %"+str(  # change strp to str argument for others and custom printfs
+        #    self.tmp-1)+")\n"
+        self.main_text += f"%{self.tmp} = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @strp, i32 0, i32 0), i32 {id_})\n"
         self.tmp += 1
 
     def printf_str(self, id_: str, len: int):
@@ -43,13 +57,26 @@ class LLVMGenerator():
     def scanf(self, id_: str):
         self.main_text += f"%{self.tmp} = call i32 (i8*, ...) @__isoc99_scanf(i8* getelementptr inbounds ([3 x i8], [3 x i8]* @strs, i32 0, i32 0), i32* %{self.id_}\n"
         self.tmp += 1
+    
+    def assign_int_anonymous(self, value: int)->str:
+        self.main_text += f"%{self.tmp} = alloca i32\n"
+        self.tmp += 1
+        self.main_text += f"store i32 {value}, i32* %{self.tmp-1}\n"
+        return f"%{self.tmp-1}"
+
+    def assign_anonymous(self, value: int,type_:Type)->str:
+        type_ = type_.value[0]
+        self.main_text += f"%{self.tmp} = alloca {type_}\n"
+        self.tmp += 1
+        self.main_text += f"store {type_} {value}, {type_}* %{self.tmp-1}\n"
+        return f"%{self.tmp-1}"
 
     def assign_int(self, id_: str, value: int):
-        self.main_text += f"store i32 {value}, i32* %{id_}\n"
+        self.main_text += f"store i32 {value}, i32* {id_}\n"
 
     def assign_double(self, id_: str, value: float):
         hex_value = struct.pack('>d', float(value)).hex()
-        self.main_text += f"store double 0x{hex_value}, double* %{id_}, align 4\n"
+        self.main_text += f"store double 0x{hex_value}, double* {id_}, align 4\n"
 
     def assign_id_int(self, id_: str, id2_: str):
         self.main_text += f"%{id_} = load i32, i32* %{id2_}\n"
@@ -121,3 +148,56 @@ class LLVMGenerator():
         self.main_text += f"%{self.tmp} = load double, double* %{id2_}\n"
         self.tmp += 1
         self.main_text += f"store double %{self.tmp-1}, double* %{id_}\n"
+
+
+    def add(self,id_1: str, id_2: str,type_:Type)->str:
+        type_ = type_.value[0]
+        self.main_text += f"%{self.tmp} = add {type_} {id_1}, {id_2}\n"
+        self.tmp+=1
+        return f"%{self.tmp-1}"
+
+    def mul(self,id_1: str, id_2: str,type_:Type)->str:
+        type_ = type_.value[0]
+        self.main_text += f"%{self.tmp} = mul {type_} {id_1}, {id_2}\n"
+        self.tmp+=1
+        return f"%{self.tmp-1}"
+
+    def sub(self,id_1: str, id_2: str,type_:Type)->str:
+        type_ = type_.value[0]
+        self.main_text += f"%{self.tmp} = sub {type_} {id_1}, {id_2}\n"
+        self.tmp+=1
+        return f"%{self.tmp-1}"
+
+    def div(self,id_1: str, id_2: str,type_:Type)->str:
+        type_ = type_.value[0]
+        ops = {
+            "doulbe":"fdiv",
+            "int":"sdiv",
+        }
+        div = ops(type_,None)
+        if div is None:
+            raise ValueError(f"Type {type_} is not supported")
+        self.main_text += f"%{self.tmp} = {div} {type_} {id_1}, {id_2}\n"
+        self.tmp+=1
+        return f"%{self.tmp-1}"
+
+    def assign(self, id_:str, value_:'tuple[str,Type]'):
+        if value_[1] == Type.INT:
+            self.assign_int(id_,value_[0])
+        elif value_[1] == Type.DOUBLE:
+            self.assign_double(id_,value_[0])
+    
+    def load(self,id_:str,type_:Type):
+        type_ = type_.value[0]
+        self.main_text += f"%{self.tmp} = load {type_}, {type_}* {id_}\n"
+        self.tmp+=1
+        return f"%{self.tmp-1}"
+    
+    def declare_variable(self, id_:str, type_:Type, is_global:bool)->str:
+        type_ = type_.value[0]
+        if is_global:
+            self.header_text += f"@{id_} = global {type_} 0\n"
+            return f'@{id_}'
+        else:
+            self.main_text += f"%{id_} = alloca {type_}\n"
+            return f'%{id_}'
