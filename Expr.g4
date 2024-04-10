@@ -1,42 +1,65 @@
 grammar Expr;
-r: stat+;
+r: ( (stat | function | struct | while)? NEWLINE)*;
 
 stat:
-	expr NEWLINE												# printExpr
-	| TYPE ID NEWLINE											# declaration
-	| ID '=' expr NEWLINE										# assign
-	| TYPE ID '[' INT ']' NEWLINE								# arrayDeclaration
-	| ID '[' op = (INT | ID) ']' '=' expr NEWLINE				# arrayAssign
-	| 'print' '(' op = (ID | INT | DOUBLE | STR) ')' NEWLINE	# print
-	| ID '=' 'read' '(' ')' NEWLINE								# read
-	| NEWLINE													# blank;
-//	| '#' COMMENT NEWLINE									# comment;
+	TYPE ID												# declaration
+	| ID '=' expr										# assign	
+	| TYPE ID '[' INT ']'								# arrayDeclaration
+	| ID '[' arrayIndexExpr ']' '=' expr				# arrayAssign
+	| 'print' '(' value ')'								# print
+	| ID '=' 'read' '(' ')'								# read
+	| ID '=' '{' expr (',' expr)* '}'					# structAssign
+	| ID '.' structField '=' expr						# structFieldAssign
+	| COMMENT_SINGLELINE								# comment;
 
 expr:
-	expr op = ('*' | '/') expr		# MulDiv
-	| expr op = ('+' | '-') expr	# AddSub
-	| INT							# int
-	| DOUBLE						# double
-	| STR							# str
-	| ID							# id
-	| '(' expr ')'					# parens
-	| ID '[' op = (INT | ID) ']'	# arrayAccess;
+	term (op = ('+' | '-') term)*   # addSub
+	| value							# single
+	| ID '[' expr ']'				# arrayAccess
+	| ID '.' structField			# structAccess;
 
-// TODO: arr: '{' val (',' val)* '}' # value;
+structField: ID;
 
-val: INT | DOUBLE;
+arrayIndexExpr: expr;
 
-// STR: '"' ID '"';
+term: factor (op = ('*' | '/') factor)*;
+factor: value | '(' expr ')';		
+
+function: STARTFUNCTION functionParam functionBlock ENDFUNCTION;
+functionParam: ID;
+functionBlock: ( stat? NEWLINE )*;
+STARTFUNCTION: 'fn';
+ENDFUNCTION: 'nf';
+
+struct: STARTSTRUCT structId structBlock ENDSTRUCT;
+structId: ID;
+structBlock: (TYPE ID NEWLINE)*;
+STARTSTRUCT: 'struct';
+ENDSTRUCT: 'tcurts';
+
+while: STARTWHILE expr whileBlock ENDWHILE;
+whileBlock: ( stat? NEWLINE )*;
+STARTWHILE: 'while';
+ENDWHILE: 'elihw';
+
+if: STARTIF expr ifBlock ENDIF;
+ifBlock: ( stat? NEWLINE )*;
+STARTIF: 'if';
+ENDIF: 'fi';
+
+value: INT | DOUBLE | ID | STR;
+
 TYPE: 'int' | 'double' | 'string';
 MUL: '*'; // assigns token name to '*' used above in grammar
 DIV: '/';
 ADD: '+';
 SUB: '-';
-STR: '"' [a-zA-Z _]+ '"';
-ID: [a-zA-Z]+; // match identifiers
-INT: [0-9]+; // match integers
-DOUBLE: [0-9]+ '.' [0-9]+; // match integers
-//COMMENT: [a-zA-Z _]+;
+STR: '"' ( ~('\\'|'"') )* '"';
+
+ID: ([a-zA-Z][a-zA-Z0-9]*) | ([a-zA-Z0-9][a-zA-Z]+); 
+INT: [0-9]+; 
+DOUBLE: [0-9]* '.' [0-9]+; 
+COMMENT_SINGLELINE: '#' ~[\n]*;
 NEWLINE:
 	'\r'? '\n'
 	| EOF; // return newlines to parser (is end-statement signal)
