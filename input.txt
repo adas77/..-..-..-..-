@@ -1,6 +1,8 @@
+
 print(1)
 int arr[3]
 arr[1]=10
 int x = arr[1]
 print(x)
-
+a = 2.0f + 2.0f * 2.0f
+print(a)

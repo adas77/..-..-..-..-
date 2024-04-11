@@ -95,25 +95,33 @@ class ExprListenerImpl(ExprListener):
         ctx = ctx.value()
         if hasattr(ctx, "INT"):
             (val_name, val_type) = self.memory.stack.pop()
-            self.generator.printf_int(val_name)
+            self.generator.printf(val_name, Type.INT)
+        elif hasattr(ctx, "DOUBLE"):
+            (val_name, val_type) = self.memory.stack.pop()
+            self.generator.printf(val_name, Type.DOUBLE)
+        elif hasattr(ctx, "FLOAT"):
+            (val_name, val_type) = self.memory.stack.pop()
+            self.generator.printf(val_name, Type.FLOAT)
         elif hasattr(ctx, "ID"):
             ID = ctx.ID().getText()
             (global_char, id_, variable) = self.get_variable(ID)
             type_ = variable["type_"]
             if type_ == Type.INT:
                 (val_name, val_type) = self.memory.stack.pop()
-                self.generator.printf_int(val_name)
+                self.generator.printf(val_name, Type.INT)
                 # self.generator.printf_int(global_char + id_)
             elif type_ == Type.DOUBLE:
                 (val_name, val_type) = self.memory.stack.pop()
-                self.generator.printf_double(val_name)
+                self.generator.printf(val_name, Type.DOUBLE)
             elif type_ == Type.STR:
                 self.generator.printf_str(ID, variable["data"]["length"])
+            elif type_ == Type.FLOAT:
+                (val_name, val_type) = self.memory.stack.pop()
+                self.generator.printf(val_name, Type.FLOAT)
+            else:
+                raise Exception(f"Unknown variable print type: {ctx}")
         else:
-            raise Exception("unknown print type")
-
-        print(self.memory)
-        pass
+            raise Exception(f"Unknown print type: {ctx}")
 
     # Enter a parse tree produced by ExprParser#read.
     def enterRead(self, ctx: ExprParser.ReadContext):
@@ -170,7 +178,6 @@ class ExprListenerImpl(ExprListener):
         self.memory.stack.append((anon_id, type_))
 
     # Enter a parse tree produced by ExprParser#single.
-
     def enterSingle(self, ctx: ExprParser.SingleContext):
         pass
 
@@ -200,6 +207,23 @@ class ExprListenerImpl(ExprListener):
         anon_id = self.generator.load(anon_id, Type.DOUBLE)
         self.memory.stack.append((anon_id, Type.DOUBLE))
 
+    # Exit a parse tree produced by ExprParser#double.
+    def exitFloat(self, ctx: ExprParser.DoubleContext):
+        FLOAT = ctx.FLOAT().getText()
+        FLOAT = FLOAT[:-1]
+        anon_id = self.generator.assign_anonymous(float(FLOAT), Type.FLOAT)
+        anon_id = self.generator.load(anon_id, Type.FLOAT)
+        self.memory.stack.append((anon_id, Type.FLOAT))
+
+    # Enter a parse tree produced by ExprParser#str.
+    def enterStr(self, ctx: ExprParser.StrContext):
+        pass
+
+    # Exit a parse tree produced by ExprParser#str.
+    def exitStr(self, ctx: ExprParser.StrContext):
+        STR = ctx.STR().getText()
+        self.memory.stack.append((None, Type.STR))
+
     # Enter a parse tree produced by ExprParser#id.
     def enterId(self, ctx: ExprParser.IdContext):
         pass
@@ -214,15 +238,11 @@ class ExprListenerImpl(ExprListener):
             anon_id = self.generator.load(global_char + id_, Type.INT)
         elif type_ == Type.DOUBLE:
             anon_id = self.generator.load(global_char + id_, Type.DOUBLE)
+        elif type_ == Type.FLOAT:
+            anon_id = self.generator.load(global_char + id_, Type.FLOAT)
+        else:
+            raise Exception(f"Unknown variable type: {type_}")
         self.memory.stack.append((anon_id, type_))
-
-    # Enter a parse tree produced by ExprParser#str.
-    def enterStr(self, ctx: ExprParser.StrContext):
-        pass
-
-    # Exit a parse tree produced by ExprParser#str.
-    def exitStr(self, ctx: ExprParser.StrContext):
-        pass
 
     # Enter a parse tree produced by ExprParser#arrayAccess.
     def enterArrayAccess(self, ctx: ExprParser.ArrayAccessContext):
