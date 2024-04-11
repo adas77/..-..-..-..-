@@ -152,8 +152,8 @@ class ExprListenerImpl(ExprListener):
         # ``
 
 
-        l:tuple[str, Type] = self.memory.stack.pop()
         r:tuple[str, Type] = self.memory.stack.pop()
+        l:tuple[str, Type] = self.memory.stack.pop()
         l_id,l_type =l
         r_id,r_type =r
         if l_type != r_type:

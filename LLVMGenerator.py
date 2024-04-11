@@ -189,8 +189,16 @@ class LLVMGenerator():
         return f"%{self.tmp-1}"
 
     def mul(self,id_1: str, id_2: str,type_:Type)->str:
+        ops = {
+            Type.DOUBLE:"fmul",
+            Type.INT:"mul",
+            Type.FLOAT:"fmul",
+        }
+        mul = ops.get(type_,None)
+        if mul is None:
+            raise ValueError(f"Type {type_} multiplication is not supported")
         type_ = type_.value[0]
-        self.main_text += f"%{self.tmp} = mul {type_} {id_1}, {id_2}\n"
+        self.main_text += f"%{self.tmp} = {mul} {type_} {id_1}, {id_2}\n"
         self.tmp+=1
         return f"%{self.tmp-1}"
 
