@@ -55,7 +55,7 @@ class ExprListenerImpl(ExprListener):
         TYPE = ctx.TYPE().getText()
         type_ = Type.map_(TYPE)
 
-        self.memory.add_variable(ID, TYPE, VarType.LOCAL_VAR, False)
+        self.memory.add_variable(ID, TYPE, VarType.ARRAY_VAR, False, data=(type_, SIZE))
         self.generator.declare_arr(ID, type_, SIZE)
 
     # Enter a parse tree produced by ExprParser#arrayAssign.
@@ -67,10 +67,13 @@ class ExprListenerImpl(ExprListener):
     def exitArrayAssign(self, ctx: ExprParser.ArrayAssignContext):
         # | ID '[' arrayIndexExpr ']' '=' expr	# arrayAssign
         ID = ctx.ID().getText()
+        arr_val = self.memory.arrays.get(ID)
+        print(f"{arr_val=}")
+        if arr_val.get("data", None) is None:
+            raise Exception("Array does not have data property")
+        type_, size = arr_val.get("data")
         INDEX = ctx.arrayIndexExpr().expr()
         VAL = ctx.expr()
-        type_ = Type.INT  # FIXME: hardcoded type
-        size = 3  # FIXME: hardcoded size
 
         index = None
         if hasattr(INDEX, "getText"):
@@ -265,9 +268,11 @@ class ExprListenerImpl(ExprListener):
     # Exit a parse tree produced by ExprParser#arrayAccess.
     def exitArrayAccess(self, ctx: ExprParser.ArrayAccessContext):
         ID = ctx.ID().getText()
+        arr_val = self.memory.arrays.get(ID)
+        if arr_val.get("data", None) is None:
+            raise Exception("Array does not have data property")
+        type_, size = arr_val.get("data")
         EXPR = ctx.expr()
-        type_ = Type.INT  # FIXME: hardcoded type
-        size = 3  # FIXME: hardcoded size
 
         index = None
         if hasattr(EXPR, "getText"):
