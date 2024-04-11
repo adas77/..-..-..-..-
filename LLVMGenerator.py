@@ -3,24 +3,25 @@ import struct
 
 
 class Type(Enum):
-    INT = "i32",
-    DOUBLE = "double",
-    STR = "i8*",
-    FLOAT = "float",
+    INT = ("i32",)
+    DOUBLE = ("double",)
+    STR = ("i8*",)
+    FLOAT = ("float",)
 
-    def map_(type_:str):
+    def map_(type_: str):
         types_mappings = {
-            "int":Type.INT,
-            "double":Type.DOUBLE,
-            "string":Type.STR,
-            "float":Type.FLOAT,
+            "int": Type.INT,
+            "double": Type.DOUBLE,
+            "string": Type.STR,
+            "float": Type.FLOAT,
         }
-        res = types_mappings.get(type_,None)
+        res = types_mappings.get(type_, None)
         if res is None:
-            raise ValueError(f"{type_} is not a valid type") 
+            raise ValueError(f"{type_} is not a valid type")
         return res
 
-class LLVMGenerator():
+
+class LLVMGenerator:
     def __init__(self, file_path: str = "./code.ll"):
         self.file_path = file_path
         self.main_text = ""
@@ -31,7 +32,7 @@ class LLVMGenerator():
         self.header_text = ""
 
     def save(self):
-        with open(self.file_path, 'w') as f:
+        with open(self.file_path, "w") as f:
             f.write(self.generate())
 
     # def printf_str(self, id_: str, len: int):
@@ -41,7 +42,7 @@ class LLVMGenerator():
     #         self.tmp-1)+")\n"
     #     self.tmp += 1
 
-    def scanf(self,id_:str,type_:Type):
+    def scanf(self, id_: str, type_: Type):
         if type_ == Type.INT:
             self.main_text += f"%{self.tmp} = call i32 (i8*, ...) @__isoc99_scanf(i8* getelementptr inbounds ([3 x i8], [3 x i8]* @str_int, i32 0, i32 0),i32* {id_})\n"
         elif type_ == Type.DOUBLE:
@@ -49,8 +50,8 @@ class LLVMGenerator():
         elif type_ == Type.FLOAT:
             self.main_text += f"%{self.tmp} = call i32 (i8*, ...) @__isoc99_scanf(i8* getelementptr inbounds ([3 x i8], [3 x i8]* @str_float, i32 0, i32 0),float* {id_})\n"
         self.tmp += 1
-    
-    def printf(self, id_:str,type_:Type):
+
+    def printf(self, id_: str, type_: Type):
         if type_ == Type.INT:
             self.main_text += f"%{self.tmp} = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @str_int_newline, i32 0, i32 0),i32 {id_})\n"
         elif type_ == Type.DOUBLE:
@@ -69,27 +70,33 @@ class LLVMGenerator():
     #     self.main_text += f"store i32 {value}, i32* %{self.tmp-1}\n"
     #     return f"%{self.tmp-1}"
 
-    def assign_anonymous(self, value: int,type_:Type)->str:
+    def assign_anonymous(self, value: int, type_: Type) -> str:
         type_stringified = type_.value[0]
         self.main_text += f"%{self.tmp} = alloca {type_stringified}\n"
         self.tmp += 1
         if type_ == Type.DOUBLE:
-            hex_value = struct.pack('>d', float(value)).hex()
-            self.main_text += f"store double 0x{hex_value}, double* %{self.tmp-1}, align 4\n"
+            hex_value = struct.pack(">d", float(value)).hex()
+            self.main_text += (
+                f"store double 0x{hex_value}, double* %{self.tmp-1}, align 4\n"
+            )
         elif type_ == Type.FLOAT:
-            hex_value = struct.pack('>d', float(value)).hex()[0:8] + "00000000"
-            self.main_text += f"store float 0x{hex_value}, float* %{self.tmp-1}, align 4\n"
+            hex_value = struct.pack(">d", float(value)).hex()[0:8] + "00000000"
+            self.main_text += (
+                f"store float 0x{hex_value}, float* %{self.tmp-1}, align 4\n"
+            )
         elif type_ == Type.INT:
             self.main_text += f"store i32 {value}, i32* %{self.tmp-1}, align 4\n"
         else:
-            self.main_text += f"store {type_stringified} {value}, {type_stringified}* %{self.tmp-1}\n"
+            self.main_text += (
+                f"store {type_stringified} {value}, {type_stringified}* %{self.tmp-1}\n"
+            )
         return f"%{self.tmp-1}"
 
     def assign_int(self, id_: str, value: int):
         self.main_text += f"store i32 {value}, i32* {id_}\n"
 
     def assign_double(self, id_: str, value: float):
-         self.main_text += f"store double {value}, double* {id_}\n"
+        self.main_text += f"store double {value}, double* {id_}\n"
 
     def assign_float(self, id_: str, value: float):
         self.main_text += f"store float {value}, float* {id_}\n"
@@ -111,8 +118,8 @@ class LLVMGenerator():
         self.main_text += f"store {type_} %{val} getelementptr ibounds ([{size} x {type_}], [{size} x {type_}]* @{id_}, {type_} 0, {type_} {index})"
 
     def declare_arr(self, id_: str, type_: Type, size: int):
-        init_val = 0 if type_ == Type.INT else .0
-        arr = ', '.join([f"{type_} {init_val}" for _ in range(size)])
+        init_val = 0 if type_ == Type.INT else 0.0
+        arr = ", ".join([f"{type_} {init_val}" for _ in range(size)])
         self.main_text += f"@{id_} = constant [{size} x {type_}] [{arr}]"
 
     def access_arr(self):
@@ -133,22 +140,21 @@ class LLVMGenerator():
         text = ""
         text += "declare i32 @printf(i8*, ...)\n"
         text += "declare i32 @__isoc99_scanf(i8*, ...)\n"
-        text += "@strp = constant [4 x i8] c\"%d\\0A\\00\"\n"
-        text += "@strlf = constant [4 x i8] c\"%lf\\00\"\n"
-        text += "@strlfn = constant [5 x i8] c\"%lf\\0A\\00\"\n"
-        text += "@strs = constant [3 x i8] c\"%d\\00\"\n"
+        text += '@strp = constant [4 x i8] c"%d\\0A\\00"\n'
+        text += '@strlf = constant [4 x i8] c"%lf\\00"\n'
+        text += '@strlfn = constant [5 x i8] c"%lf\\0A\\00"\n'
+        text += '@strs = constant [3 x i8] c"%d\\00"\n'
         text += '@strstr = constant [4 x i8] c"%s\\0A\\00"\n'
 
-        text += "@str_int_newline = constant [4 x i8] c\"%d\\0A\\00\"\n"
-        text += "@str_double_newline = constant [5 x i8] c\"%lf\\0A\\00\"\n"
-        text += "@str_string_newline = constant [4 x i8] c\"%s\\0A\\00\"\n"
-        text += "@str_float_newline = constant [4 x i8] c\"%f\\0A\\00\"\n"
+        text += '@str_int_newline = constant [4 x i8] c"%d\\0A\\00"\n'
+        text += '@str_double_newline = constant [5 x i8] c"%lf\\0A\\00"\n'
+        text += '@str_string_newline = constant [4 x i8] c"%s\\0A\\00"\n'
+        text += '@str_float_newline = constant [4 x i8] c"%f\\0A\\00"\n'
 
-        text += "@str_int = constant [3 x i8] c\"%d\\00\"\n"
-        text += "@str_double = constant [4 x i8] c\"%lf\\00\"\n"
-        text += "@str_string = constant [3 x i8] c\"%s\\00\"\n"
-        text += "@str_float = constant [3 x i8] c\"%f\\00\"\n"
-
+        text += '@str_int = constant [3 x i8] c"%d\\00"\n'
+        text += '@str_double = constant [4 x i8] c"%lf\\00"\n'
+        text += '@str_string = constant [3 x i8] c"%s\\00"\n'
+        text += '@str_float = constant [3 x i8] c"%f\\00"\n'
 
         text += self.header_text
         text += "define i32 @main() nounwind{\n"
@@ -157,7 +163,7 @@ class LLVMGenerator():
         return text
 
     def declare_static_string(self, name: str, value: str):
-        self.header_text += f"@{name} = constant [{len(value)+1} x i8] c\"{value}\\00\"\n"
+        self.header_text += f'@{name} = constant [{len(value)+1} x i8] c"{value}\\00"\n'
 
     def declare_str(self, name: str, length: int):
         self.main_text += f"%{name} = alloca [{length+1} x i8]\n"
@@ -169,14 +175,13 @@ class LLVMGenerator():
         self.main_text += f"%{self.tmp} = load i32, i32* %{id2_}\n"
         self.tmp += 1
         self.main_text += f"store i32 %{self.tmp-1}, i32* %{id_}\n"
-    
+
     def assign_double_to_double(self, id_: str, id2_: str):
         self.main_text += f"%{self.tmp} = load double, double* %{id2_}\n"
         self.tmp += 1
         self.main_text += f"store double %{self.tmp-1}, double* %{id_}\n"
 
-
-    def add(self,id_1: str, id_2: str,type_:Type)->str:
+    def add(self, id_1: str, id_2: str, type_: Type) -> str:
         if type_ == Type.INT:
             self.main_text += f"%{self.tmp} = add i32 {id_1}, {id_2}\n"
         elif type_ == Type.DOUBLE:
@@ -185,66 +190,66 @@ class LLVMGenerator():
             self.main_text += f"%{self.tmp} = fadd float {id_1}, {id_2}\n"
         else:
             raise ValueError(f"Type {type_} adding is not supported")
-        self.tmp+=1
+        self.tmp += 1
         return f"%{self.tmp-1}"
 
-    def mul(self,id_1: str, id_2: str,type_:Type)->str:
+    def mul(self, id_1: str, id_2: str, type_: Type) -> str:
         ops = {
-            Type.DOUBLE:"fmul",
-            Type.INT:"mul",
-            Type.FLOAT:"fmul",
+            Type.DOUBLE: "fmul",
+            Type.INT: "mul",
+            Type.FLOAT: "fmul",
         }
-        mul = ops.get(type_,None)
+        mul = ops.get(type_, None)
         if mul is None:
             raise ValueError(f"Type {type_} multiplication is not supported")
         type_ = type_.value[0]
         self.main_text += f"%{self.tmp} = {mul} {type_} {id_1}, {id_2}\n"
-        self.tmp+=1
+        self.tmp += 1
         return f"%{self.tmp-1}"
 
-    def sub(self,id_1: str, id_2: str,type_:Type)->str:
+    def sub(self, id_1: str, id_2: str, type_: Type) -> str:
         type_ = type_.value[0]
         self.main_text += f"%{self.tmp} = sub {type_} {id_1}, {id_2}\n"
-        self.tmp+=1
+        self.tmp += 1
         return f"%{self.tmp-1}"
 
-    def div(self,id_1: str, id_2: str,type_:Type)->str:
-        
+    def div(self, id_1: str, id_2: str, type_: Type) -> str:
+
         ops = {
-            Type.DOUBLE:"fdiv",
-            Type.INT:"sdiv",
-            Type.FLOAT:"fdiv",
+            Type.DOUBLE: "fdiv",
+            Type.INT: "sdiv",
+            Type.FLOAT: "fdiv",
         }
         print(f"Type: {type_} ops: {ops}")
-        div = ops.get(type_,None)
+        div = ops.get(type_, None)
         if div is None:
             raise ValueError(f"Type {type_} is not supported")
         type_ = type_.value[0]
         self.main_text += f"%{self.tmp} = {div} {type_} {id_1}, {id_2}\n"
-        self.tmp+=1
+        self.tmp += 1
         return f"%{self.tmp-1}"
 
-    def assign(self, id_:str, value_:'tuple[str,Type]'):
+    def assign(self, id_: str, value_: "tuple[str,Type]"):
         if value_[1] == Type.INT:
-            self.assign_int(id_,value_[0])
+            self.assign_int(id_, value_[0])
         elif value_[1] == Type.DOUBLE:
-            self.assign_double(id_,value_[0])
+            self.assign_double(id_, value_[0])
         elif value_[1] == Type.FLOAT:
-            self.assign_float(id_,value_[0])
+            self.assign_float(id_, value_[0])
 
-    def load(self,id_:str,type_:Type):
+    def load(self, id_: str, type_: Type):
         type_ = type_.value[0]
         self.main_text += f"%{self.tmp} = load {type_}, {type_}* {id_}\n"
-        self.tmp+=1
+        self.tmp += 1
         return f"%{self.tmp-1}"
-    
-    def declare_variable(self, id_:str, type_:Type, is_global:bool)->str:
-        zero = '0' if type_ == Type.INT else '0.0'
+
+    def declare_variable(self, id_: str, type_: Type, is_global: bool) -> str:
+        zero = "0" if type_ == Type.INT else "0.0"
         type_ = type_.value[0]
 
         if is_global:
             self.header_text += f"@{id_} = global {type_} {zero}\n"
-            return f'@{id_}'
+            return f"@{id_}"
         else:
             self.main_text += f"%{id_} = alloca {type_}\n"
-            return f'%{id_}'
+            return f"%{id_}"
