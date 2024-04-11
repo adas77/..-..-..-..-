@@ -32,9 +32,11 @@ class ExprVisitorImpl(ExprVisitor):
             ExprParser.INT: ctx.INT(),
             ExprParser.FLOAT: ctx.FLOAT(),
             ExprParser.STR: ctx.STR(),
-            ExprParser.ID: None if not hasattr(ctx.ID(), "getText") else
-            self.memory.get(
-                ctx.ID().getText(), None)
+            ExprParser.ID: (
+                None
+                if not hasattr(ctx.ID(), "getText")
+                else self.memory.get(ctx.ID().getText(), None)
+            ),
         }
         v = ops.get(ctx.op.type, None)
         v = v if v is None or isinstance(v, (str, list)) else v.getText()
@@ -55,12 +57,12 @@ class ExprVisitorImpl(ExprVisitor):
         right = int(self.visit(ctx.expr(1)))
         if right == 0:
             raise ValueError("Division by zero")
-        return left*right if ctx.op.type == ExprParser.MUL else left / right
+        return left * right if ctx.op.type == ExprParser.MUL else left / right
 
     def visitAddSub(self, ctx):
         left = int(self.visit(ctx.expr(0)))
         right = int(self.visit(ctx.expr(1)))
-        return left+right if ctx.op.type == ExprParser.ADD else left - right
+        return left + right if ctx.op.type == ExprParser.ADD else left - right
 
     def visitParens(self, ctx):
         return self.visit(ctx.expr())

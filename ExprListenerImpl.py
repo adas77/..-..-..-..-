@@ -29,18 +29,18 @@ class ExprListenerImpl(ExprListener):
             TYPE = Type.map_(TYPE)
         ID = ctx.ID().getText()
         (val_name, val_type) = self.memory.stack.pop()
-        (global_char, id_, variable) = self.set_variable(
-            ID, val_type, TYPE is not None)
-        if val_type != variable['type_']:
-            if variable['locked_type']:
+        (global_char, id_, variable) = self.set_variable(ID, val_type, TYPE is not None)
+        if val_type != variable["type_"]:
+            if variable["locked_type"]:
                 raise ValueError(
-                    f"LockeType Types: {val_type} must match {variable['type_']}")
+                    f"LockeType Types: {val_type} must match {variable['type_']}"
+                )
             else:
                 # del self.memory.local_variables[ID]
                 # (global_char, id_, variable) = self.set_variable(ID, val_type, TYPE is not None)
 
                 raise Exception("variable type change not implemented")
-        self.generator.assign(global_char+id_, (val_name, val_type))
+        self.generator.assign(global_char + id_, (val_name, val_type))
 
     # Enter a parse tree produced by ExprParser#arrayDeclaration.
     def enterArrayDeclaration(self, ctx: ExprParser.ArrayDeclarationContext):
@@ -209,11 +209,11 @@ class ExprListenerImpl(ExprListener):
         ID = ctx.ID().getText()
         (global_char, id_, variable) = self.get_variable(ID)
         type_ = variable["type_"]
-        anon_id = ''
+        anon_id = ""
         if type_ == Type.INT:
-            anon_id = self.generator.load(global_char+id_, Type.INT)
+            anon_id = self.generator.load(global_char + id_, Type.INT)
         elif type_ == Type.DOUBLE:
-            anon_id = self.generator.load(global_char+id_, Type.DOUBLE)
+            anon_id = self.generator.load(global_char + id_, Type.DOUBLE)
         self.memory.stack.append((anon_id, type_))
 
     # Enter a parse tree produced by ExprParser#str.
@@ -358,46 +358,48 @@ class ExprListenerImpl(ExprListener):
         pass
 
     def set_variable(self, id_: str, assign_type: Type, locked_type: bool = False):
-        final_id: tuple[str, str, object] = ''
+        final_id: tuple[str, str, object] = ""
         if self.memory.global_context:
             variable = self.memory.global_variables.get(id_, None)
             if variable is None:
                 self.memory.add_variable(
-                    id_, assign_type, VarType.GLOBAL_VAR, locked_type)
-                self.generator.declare_variable(
-                    id_, assign_type, is_global=True)
+                    id_, assign_type, VarType.GLOBAL_VAR, locked_type
+                )
+                self.generator.declare_variable(id_, assign_type, is_global=True)
                 variable = self.memory.global_variables.get(id_, None)
             else:
-                if variable['locked_type']:
-                    if variable['type_'] != assign_type:
+                if variable["locked_type"]:
+                    if variable["type_"] != assign_type:
                         raise ValueError(
-                            f"Types: {variable['type_']} must match {assign_type}")
+                            f"Types: {variable['type_']} must match {assign_type}"
+                        )
 
-            final_id = ('@', id_, variable)
+            final_id = ("@", id_, variable)
         else:
             variable = self.memory.local_variables.get(id_, None)
             if variable is None:
                 # self.memory.add_variable(id_,type_,var_type,locked_type,data)
 
                 self.memory.add_variable(
-                    id_, assign_type, VarType.LOCAL_VAR, locked_type)
-                self.generator.declare_variable(
-                    id_, assign_type, is_global=False)
+                    id_, assign_type, VarType.LOCAL_VAR, locked_type
+                )
+                self.generator.declare_variable(id_, assign_type, is_global=False)
                 variable = self.memory.local_variables.get(id_, None)
             else:
-                if variable['locked_type']:
-                    if variable['type_'] != assign_type:
+                if variable["locked_type"]:
+                    if variable["type_"] != assign_type:
                         raise ValueError(
-                            f"Types: {variable['type_']} must match {assign_type}")
-            final_id = ('%', id_, variable)
+                            f"Types: {variable['type_']} must match {assign_type}"
+                        )
+            final_id = ("%", id_, variable)
         return final_id
 
     def get_variable(self, id_: str):
         final_id: tuple[str, str, object] = None
         if self.memory.local_variables.get(id_, None) is not None:
-            final_id = ('%', id_, self.memory.local_variables.get(id_, None))
+            final_id = ("%", id_, self.memory.local_variables.get(id_, None))
         elif self.memory.global_variables.get(id_, None) is not None:
-            final_id = ('@', id_, self.memory.global_variables.get(id_, None))
+            final_id = ("@", id_, self.memory.global_variables.get(id_, None))
         else:
             raise ValueError(f"{id_} not found")
         return final_id
