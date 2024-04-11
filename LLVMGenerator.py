@@ -29,6 +29,7 @@ class LLVMGenerator:
         self.file_path = file_path
         self.main_text = ""
         self.tmp = 1
+        self.str_tmp = 1
         self.main_tmp = 1
         self.br = 0
         self.br_stack = []
@@ -52,6 +53,8 @@ class LLVMGenerator:
             self.main_text += f"%{self.tmp} = call i32 (i8*, ...) @__isoc99_scanf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @str_double, i32 0, i32 0),double* {id_})\n"
         elif type_ == Type.FLOAT:
             self.main_text += f"%{self.tmp} = call i32 (i8*, ...) @__isoc99_scanf(i8* getelementptr inbounds ([3 x i8], [3 x i8]* @str_float, i32 0, i32 0),float* {id_})\n"
+        else:
+            raise ValueError(f"Type {type_} scanning is not supported")
         self.tmp += 1
 
     def printf(self, id_: str, type_: Type):
@@ -63,6 +66,8 @@ class LLVMGenerator:
             self.main_text += f"%{self.tmp} = fpext float {id_} to double\n"
             self.tmp += 1
             self.main_text += f"%{self.tmp} = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @str_float_newline, i32 0, i32 0),double %{self.tmp-1})\n"
+        elif type_ == Type.STR:
+            self.main_text += f"%{self.tmp} = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @str_string_newline, i32 0, i32 0),i8* {id_})\n"
         else:
             raise ValueError(f"Type {type_} printing is not supported")
         self.tmp += 1
@@ -73,7 +78,7 @@ class LLVMGenerator:
     #     self.main_text += f"store i32 {value}, i32* %{self.tmp-1}\n"
     #     return f"%{self.tmp-1}"
 
-    def assign_anonymous(self, value: int, type_: Type) -> str:
+    def assign_anonymous(self, value, type_: Type) -> str:
         type_stringified = type_.value[0]
         self.main_text += f"%{self.tmp} = alloca {type_stringified}\n"
         self.tmp += 1
@@ -89,6 +94,15 @@ class LLVMGenerator:
             )
         elif type_ == Type.INT:
             self.main_text += f"store i32 {value}, i32* %{self.tmp-1}, align 4\n"
+        elif type_ == Type.STR:
+            # declare global string then load into anonymous pointer
+            global_string_id = self.declare_global_string(
+                f"string_{self.str_tmp}", str(value)
+            )
+            self.str_tmp += 1
+            str_length = len(str(value))
+            self.main_text += f"%{self.tmp} = getelementptr inbounds [{str_length+1} x i8], [{str_length+1} x i8]* {global_string_id}, i32 0, i32 0\n"
+            self.tmp += 1
         else:
             self.main_text += (
                 f"store {type_stringified} {value}, {type_stringified}* %{self.tmp-1}\n"
@@ -161,8 +175,9 @@ class LLVMGenerator:
         text += "ret i32 0 }\n"
         return text
 
-    def declare_static_string(self, name: str, value: str):
+    def declare_global_string(self, name: str, value: str) -> str:
         self.header_text += f'@{name} = constant [{len(value)+1} x i8] c"{value}\\00"\n'
+        return f"@{name}"
 
     def declare_str(self, name: str, length: int):
         self.main_text += f"%{name} = alloca [{length+1} x i8]\n"
@@ -233,14 +248,33 @@ class LLVMGenerator:
             self.assign_double(id_, value_[0])
         elif value_[1] == Type.FLOAT:
             self.assign_float(id_, value_[0])
+        elif value_[1] == Type.STR:
+            self.main_text += f"store i8* {value_[0]}, i8** {id_}\n"
+        else:
+            raise ValueError(f"Type {value_[1]} assigning is not supported")
 
-    def load(self, id_: str, type_: Type):
+    def load(self, id_: str, type_: Type, str_length: int = 0) -> str:
+        if type_ == Type.STR:
+            # %2 = getelementptr inbounds [12 x i8], [12 x i8]* @string_1, i32 0, i32 0
+            # self.main_text += f"%{self.tmp} = getelementptr inbounds [{str_length+1} x i8], [{str_length+1} x i8]* {id_}, i32 0, i32 0\n"
+            # self.tmp += 1
+            # return f"%{self.tmp-1}"
+            return f"%{self.tmp-1}"
+
         type_ = type_.value[0]
         self.main_text += f"%{self.tmp} = load {type_}, {type_}* {id_}\n"
         self.tmp += 1
         return f"%{self.tmp-1}"
 
     def declare_variable(self, id_: str, type_: Type, is_global: bool) -> str:
+        if type_ == Type.STR:
+            if is_global:
+                self.header_text += f"@{id_} = global i8* null\n"
+                return f"@{id_}"
+            else:
+                self.main_text += f"%{id_} = alloca i8*\n"
+                return f"%{id_}"
+
         zero = "0" if type_ == Type.INT else "0.0"
         if is_global:
             self.header_text += f"@{id_} = global {type_} {zero}\n"

@@ -102,7 +102,7 @@ class ExprListenerImpl(ExprListener):
             print(f"STR assign {ID} = {STR}")
             STR = STR[1:-1]
             self.set_variable_data(ID, {"length": len(STR)})
-            self.generator.declare_static_string(ID, STR)
+            self.generator.declare_global_string(ID, STR)
         elif hasattr(ctx.expr(), "ID"):
             ID_ID = ctx.expr().ID().getText()
             if not self.variable_exists(ID_ID):
