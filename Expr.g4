@@ -50,9 +50,9 @@ ifBlock: ( stat? NEWLINE)*;
 STARTIF: 'if';
 ENDIF: 'fi';
 
-value: INT # int | DOUBLE # double | ID # id | STR # str;
+value: INT # int | DOUBLE # double | ID # id | STR # str | FLOAT # float;
 
-TYPE: 'int' | 'double' | 'string';
+TYPE: 'int' | 'double' | 'string' | 'float';
 MUL: '*'; // assigns token name to '*' used above in grammar
 DIV: '/';
 ADD: '+';
@@ -63,6 +63,7 @@ ID: ([a-zA-Z][a-zA-Z0-9]*);
 
 INT: [-]? [0-9]+;
 DOUBLE: [-]? [0-9]* '.' [0-9]+;
+FLOAT: [-]? [0-9]* '.' [0-9]+[f];
 COMMENT_SINGLELINE: '#' ~[\n]*;
 NEWLINE:
 	'\r'? '\n'

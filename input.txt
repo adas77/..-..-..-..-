@@ -1,3 +1,5 @@
-int a = 0
-read(a)
+a = 1.0f / 3.0f + 0.0001f
 print(a)
+
+b = 1.0 / 3.0 + 0.0001
+print(b)
