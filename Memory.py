@@ -8,6 +8,7 @@ class VarType(Enum):
     LOCAL_VAR = ("local_var",)
     FN_VAR = ("fn_var",)
     STRUCT_VAR = ("struct_var",)
+    ARRAY_VAR = ("array_var",)
 
 
 class Memory:
@@ -16,6 +17,7 @@ class Memory:
         self.local_variables: dict[str, object] = {}
         self.functions: dict[str, object] = {}
         self.structs: dict[str, object] = {}
+        self.arrays: dict[str, object] = {}
 
         self.stack: list[tuple[str, Type]] = []
         self.global_context: bool = True
@@ -43,7 +45,7 @@ class Memory:
         var_type_dict[id_] = {
             "type_": type_,
             "locked_type": locked_type,
-            data: data,
+            "data": data,
         }
 
     def _get_var_type(self, var_type: VarType) -> dict | None:
@@ -52,20 +54,7 @@ class Memory:
             VarType.LOCAL_VAR: self.local_variables,
             VarType.FN_VAR: self.functions,
             VarType.STRUCT_VAR: self.structs,
+            VarType.ARRAY_VAR: self.arrays,
         }
         var_type_dict = var_type_mappings.get(var_type, None)
         return var_type_dict
-
-    # def get_variable(self, id_:str):
-    #     if not self.variable_exists(id_):
-    #         raise ValueError(f"{id_} not found")
-    #     return self.memory.get(id_)
-
-    # def add_variable(self, id_:str, type_:str, locked_type:bool, data = None):
-    #     if self.variable_exists(id_):
-    #         raise ValueError(f"{id_} already declared")
-    #     self.memory[id_] = {
-    #         "type": type_,
-    #         "locked_type": locked_type,
-    #         "data": data
-    #     }

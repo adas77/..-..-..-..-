@@ -6,3 +6,7 @@ int x = arr[1]
 print(x)
 a = 2.0f + 2.0f * 2.0f
 print(a)
+double arr2[4]
+arr2[1]=68.7
+double b = arr2[1]
+print(b) 

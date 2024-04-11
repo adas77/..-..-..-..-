@@ -117,9 +117,6 @@ class LLVMGenerator:
         return f"%{self.tmp-1}"
 
     def declare_arr(self, id_: str, type_: Type, size: int):
-        # init_val = 0 if type_ == Type.INT else 0.0
-        # arr = ", ".join([f"{type_} {init_val}" for _ in range(size)])
-        # self.main_text += f"@{id_} = constant [{size} x {type_}] [{arr}]"
         self.main_text += f"%{id_} = alloca [{size} x {type_}], align 8\n"
 
     def access_arr(self, id_, type_: Type, size: int, index: int):
