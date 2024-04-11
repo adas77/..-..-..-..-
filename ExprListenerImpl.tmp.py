@@ -2,25 +2,23 @@ from g4.ExprListener import ExprListener
 from g4.ExprParser import ExprParser
 from LLVMGenerator import LLVMGenerator, Type
 
+
 class ExprListenerImpl(ExprListener):
     def __init__(self):
         self.memory = {}
         self.generator = LLVMGenerator()
 
-    def add_variable(self, ID, TYPE:Type, data = None):
+    def add_variable(self, ID, TYPE: Type, data=None):
         if self.variable_exists(ID):
             raise Exception(f"{ID} already declared")
-        variable_struct = {
-            "TYPE": TYPE,
-            "data": data
-        }
+        variable_struct = {"TYPE": TYPE, "data": data}
         self.memory[ID] = variable_struct
-    
+
     def remove_variable(self, ID):
         if not self.variable_exists(ID):
             raise Exception(f"{ID} not declared")
         self.memory.pop(ID)
-    
+
     def get_variable(self, ID):
         if not self.variable_exists(ID):
             raise Exception(f"{ID} not declared")
@@ -119,6 +117,7 @@ class ExprListenerImpl(ExprListener):
                 self.generator.assign_double_to_double(ID, ID_ID)
         else:
             raise Exception(f"variable type not known {ID}")
+
     # Exit a parse tree produced by ExprParser#arrayDeclaration.
 
     def exitArrayDeclaration(self, ctx: ExprParser.ArrayDeclarationContext):
@@ -176,6 +175,7 @@ class ExprListenerImpl(ExprListener):
             raise Exception("unknown print type")
 
         print(self.memory)
+
     # Enter a parse tree produced by ExprParser#read.
 
     def enterRead(self, ctx: ExprParser.ReadContext):

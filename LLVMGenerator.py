@@ -8,6 +8,9 @@ class Type(Enum):
     STR = ("i8*",)
     FLOAT = ("float",)
 
+    def __str__(self):
+        return f"{self.value[0]}"
+
     def map_(type_: str):
         types_mappings = {
             "int": Type.INT,
@@ -108,27 +111,23 @@ class LLVMGenerator:
         self.main_text += f"%{id_} = load i32, i32* %{id2_}\n"
 
     def assign_arr(self, id_: str, type_: Type, size: int, index: int, val):
-        # %newValue = ...
-        # store i32 %newValue, i32* getelementptr inbounds ([5 x i32], [5 x i32]* @myArray, i32 0, i32 <index>)
-        try:
-
-            val = int(val) if type_ == Type.INT else float(val)
-        except:
-            raise ValueError("")
-        self.main_text += f"store {type_} %{val} getelementptr ibounds ([{size} x {type_}], [{size} x {type_}]* @{id_}, {type_} 0, {type_} {index})"
+        self.main_text += f"%{self.tmp} = getelementptr [{size} x {type_}], [{size} x {type_}]* %{id_}, i32 0, i32 {index}\n"
+        self.main_text += f"store {type_} {val}, {type_}* %{self.tmp}\n"
+        self.tmp += 1
+        return f"%{self.tmp-1}"
 
     def declare_arr(self, id_: str, type_: Type, size: int):
-        init_val = 0 if type_ == Type.INT else 0.0
-        arr = ", ".join([f"{type_} {init_val}" for _ in range(size)])
-        self.main_text += f"@{id_} = constant [{size} x {type_}] [{arr}]"
+        # init_val = 0 if type_ == Type.INT else 0.0
+        # arr = ", ".join([f"{type_} {init_val}" for _ in range(size)])
+        # self.main_text += f"@{id_} = constant [{size} x {type_}] [{arr}]"
+        self.main_text += f"%{id_} = alloca [{size} x {type_}], align 8\n"
 
-    def access_arr(self):
-        # define i32 @accessArrayElement(i32* %arr) {
-        # %elementPtr = getelementptr i32, i32* %arr, i64 2
-        # %value = load i32, i32* %elementPtr
-        # ret i32 %value
-        # }
-        self.main_text += f""
+    def access_arr(self, id_, type_: Type, size: int, index: int):
+        self.main_text += f"%{self.tmp} = getelementptr [{size} x {type_}], [{size} x {type_}]* %{id_}, i32 0, i32 {index}\n"
+        self.tmp += 1
+        self.main_text += f"%{self.tmp} = load {type_}, {type_}* %{self.tmp-1}\n"
+        self.tmp += 1
+        return f"%{self.tmp-1}"
 
     def declare_int(self, id_: str):
         self.main_text += f"%{id_} = alloca i32\n"
@@ -208,7 +207,6 @@ class LLVMGenerator:
         return f"%{self.tmp-1}"
 
     def sub(self, id_1: str, id_2: str, type_: Type) -> str:
-        type_ = type_.value[0]
         self.main_text += f"%{self.tmp} = sub {type_} {id_1}, {id_2}\n"
         self.tmp += 1
         return f"%{self.tmp-1}"
@@ -224,7 +222,6 @@ class LLVMGenerator:
         div = ops.get(type_, None)
         if div is None:
             raise ValueError(f"Type {type_} is not supported")
-        type_ = type_.value[0]
         self.main_text += f"%{self.tmp} = {div} {type_} {id_1}, {id_2}\n"
         self.tmp += 1
         return f"%{self.tmp-1}"
@@ -245,8 +242,6 @@ class LLVMGenerator:
 
     def declare_variable(self, id_: str, type_: Type, is_global: bool) -> str:
         zero = "0" if type_ == Type.INT else "0.0"
-        type_ = type_.value[0]
-
         if is_global:
             self.header_text += f"@{id_} = global {type_} {zero}\n"
             return f"@{id_}"

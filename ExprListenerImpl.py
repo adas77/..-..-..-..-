@@ -48,17 +48,45 @@ class ExprListenerImpl(ExprListener):
 
     # Exit a parse tree produced by ExprParser#arrayDeclaration.
     def exitArrayDeclaration(self, ctx: ExprParser.ArrayDeclarationContext):
-        pass
+        ID = ctx.ID().getText()
+        SIZE = int(ctx.INT().getText())
+        TYPE = ctx.TYPE().getText()
+        type_ = Type.map_(TYPE)
+
+        self.memory.add_variable(ID, TYPE, VarType.LOCAL_VAR, False)
+        self.generator.declare_arr(ID, type_, SIZE)
 
     # Enter a parse tree produced by ExprParser#arrayAssign.
+
     def enterArrayAssign(self, ctx: ExprParser.ArrayAssignContext):
         pass
 
     # Exit a parse tree produced by ExprParser#arrayAssign.
     def exitArrayAssign(self, ctx: ExprParser.ArrayAssignContext):
-        pass
+        # | ID '[' arrayIndexExpr ']' '=' expr	# arrayAssign
+        ID = ctx.ID().getText()
+        INDEX = ctx.arrayIndexExpr().expr()
+        VAL = ctx.expr()
+        type_ = Type.INT  # FIXME: hardcoded type
+        size = 3  # FIXME: hardcoded size
+
+        index = None
+        if hasattr(INDEX, "getText"):
+            index = INDEX.getText()
+            print(index)
+        else:
+            raise NotImplementedError()
+
+        val = None
+        if hasattr(VAL, "getText"):
+            val = VAL.getText()
+        else:
+            raise NotImplementedError()
+
+        self.generator.assign_arr(ID, type_, size, index, val)
 
     # Enter a parse tree produced by ExprParser#print.
+
     def enterPrint(self, ctx: ExprParser.PrintContext):
         pass
 
@@ -136,17 +164,6 @@ class ExprListenerImpl(ExprListener):
 
     # Exit a parse tree produced by ExprParser#addSub.
     def exitAddSub(self, ctx: ExprParser.AddSubContext):
-        # print(2*"\n","exitAddSub")
-        # print(f"{dir(ctx)}")
-        # print(f"{dir(ctx.term)}")
-
-        # TODO: Chceck muldiv
-
-        # if ctx.term() is not None:
-
-        #
-        # ``
-
         r: tuple[str, Type] = self.memory.stack.pop()
         l: tuple[str, Type] = self.memory.stack.pop()
         l_id, l_type = l
@@ -233,9 +250,22 @@ class ExprListenerImpl(ExprListener):
 
     # Exit a parse tree produced by ExprParser#arrayAccess.
     def exitArrayAccess(self, ctx: ExprParser.ArrayAccessContext):
-        pass
+        ID = ctx.ID().getText()
+        EXPR = ctx.expr()
+        type_ = Type.INT  # FIXME: hardcoded type
+        size = 3  # FIXME: hardcoded size
+
+        index = None
+        if hasattr(EXPR, "getText"):
+            index = EXPR.getText()
+        else:
+            raise NotImplementedError()
+
+        anon_id = self.generator.access_arr(ID, type_, size, index)
+        self.memory.stack.append((anon_id, type_))
 
     # Enter a parse tree produced by ExprParser#structAccess.
+
     def enterStructAccess(self, ctx: ExprParser.StructAccessContext):
         pass
 
