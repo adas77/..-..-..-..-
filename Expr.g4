@@ -12,12 +12,14 @@ stat:
 	| COMMENT_SINGLELINE					# comment;
 
 expr:
-	term							# singleTerm
-	| term op = ('+' | '-') expr	# addSub
-	| value							# single
-	| ID '[' expr ']'				# arrayAccess
-	| ID '.' structField			# structAccess
-	| ID '()'						# functionCall;
+	term								# singleTerm
+	| term op = ('+' | '-') expr		# addSub
+	| term op = ('&' | '|' | '^') expr	# bitAndOrXor
+	| '~' expr							# bitNot
+	| value								# single
+	| ID '[' expr ']'					# arrayAccess
+	| ID '.' structField				# structAccess
+	| ID '()'							# functionCall;
 
 structField: ID;
 
@@ -50,7 +52,12 @@ ifBlock: ( stat? NEWLINE)*;
 STARTIF: 'if';
 ENDIF: 'fi';
 
-value: INT # int | DOUBLE # double | ID # id | STR # str | FLOAT # float;
+value:
+	INT			# int
+	| DOUBLE	# double
+	| ID		# id
+	| STR		# str
+	| FLOAT		# float;
 
 TYPE: 'int' | 'double' | 'string' | 'float';
 MUL: '*'; // assigns token name to '*' used above in grammar
@@ -58,12 +65,16 @@ DIV: '/';
 ADD: '+';
 SUB: '-';
 STR: '"' ( ~('\\' | '"'))* '"';
+BIT_AND: '&';
+BIT_OR: '|';
+BIT_XOR: '^';
+BIT_NOT: '~';
 
 ID: ([a-zA-Z][a-zA-Z0-9]*);
 
 INT: [-]? [0-9]+;
 DOUBLE: [-]? [0-9]* '.' [0-9]+;
-FLOAT: [-]? [0-9]* '.' [0-9]+[f];
+FLOAT: [-]? [0-9]* '.' [0-9]+ [f];
 COMMENT_SINGLELINE: '#' ~[\n]*;
 NEWLINE:
 	'\r'? '\n'

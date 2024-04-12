@@ -461,3 +461,42 @@ class ExprListenerImpl(ExprListener):
 
         anon_id = fn(l_id, r_id, type_)
         self.memory.stack.append((anon_id, type_))
+
+    # Exit a parse tree produced by ExprParser#bitAndOrXor.
+    def exitBitAndOrXor(self, ctx: ExprParser.BitAndOrXorContext):
+        r: tuple[str, Type] = self.memory.stack.pop()
+        l: tuple[str, Type] = self.memory.stack.pop()
+        l_id, l_type = l
+        r_id, r_type = r
+        if l_type != r_type:
+            raise ValueError(f"Types: {l_type} must match {r_type}")
+
+        if l_type != Type.INT:
+            raise ValueError(f"Types: {l_type} must be INT")
+        if r_type != Type.INT:
+            raise ValueError(f"Types: {r_type} must be INT")
+
+        type_ = l_type
+        fn = None
+        if ctx.op.type == ExprParser.BIT_AND:
+            fn = self.generator.bit_and
+        elif ctx.op.type == ExprParser.BIT_OR:
+            fn = self.generator.bit_or
+        elif ctx.op.type == ExprParser.BIT_XOR:
+            fn = self.generator.bit_xor
+        else:
+            raise ValueError(f"Unknown binary operator: {ctx.op.type}")
+
+        anon_id = fn(l_id, r_id, type_)
+        self.memory.stack.append((anon_id, type_))
+
+    # Exit a parse tree produced by ExprParser#bitNot.
+    def exitBitNot(self, ctx: ExprParser.BitNotContext):
+        r: tuple[str, Type] = self.memory.stack.pop()
+        r_id, r_type = r
+        if r_type != Type.INT:
+            raise ValueError(f"Types: {r_type} must be INT")
+
+        type_ = r_type
+        anon_id = self.generator.bit_not(r_id, type_)
+        self.memory.stack.append((anon_id, type_))

@@ -238,6 +238,26 @@ class LLVMGenerator:
         self.tmp += 1
         return f"%{self.tmp-1}"
 
+    def bit_and(self, id_1: str, id_2: str, type_: Type) -> str:
+        self.main_text += f"%{self.tmp} = and {type_} {id_1}, {id_2}\n"
+        self.tmp += 1
+        return f"%{self.tmp-1}"
+
+    def bit_or(self, id_1: str, id_2: str, type_: Type) -> str:
+        self.main_text += f"%{self.tmp} = or {type_} {id_1}, {id_2}\n"
+        self.tmp += 1
+        return f"%{self.tmp-1}"
+
+    def bit_xor(self, id_1: str, id_2: str, type_: Type) -> str:
+        self.main_text += f"%{self.tmp} = xor {type_} {id_1}, {id_2}\n"
+        self.tmp += 1
+        return f"%{self.tmp-1}"
+
+    def bit_not(self, id_: str, type_: Type) -> str:
+        self.main_text += f"%{self.tmp} = xor {type_} {id_}, -1\n"
+        self.tmp += 1
+        return f"%{self.tmp-1}"
+
     def assign(self, id_: str, value_: "tuple[str,Type]"):
         if value_[1] == Type.INT:
             self.assign_int(id_, value_[0])
