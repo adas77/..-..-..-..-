@@ -68,7 +68,6 @@ class ExprListenerImpl(ExprListener):
         # | ID '[' arrayIndexExpr ']' '=' expr	# arrayAssign
         ID = ctx.ID().getText()
         arr_val = self.memory.arrays.get(ID)
-        print(f"{arr_val=}")
         if arr_val.get("data", None) is None:
             raise Exception("Array does not have data property")
         type_, size = arr_val.get("data")
@@ -77,7 +76,7 @@ class ExprListenerImpl(ExprListener):
 
         index = None
         if hasattr(INDEX, "getText"):
-            index = INDEX.getText()
+            index = int(INDEX.getText())
             print(index)
         else:
             raise NotImplementedError()
@@ -276,7 +275,7 @@ class ExprListenerImpl(ExprListener):
 
         index = None
         if hasattr(EXPR, "getText"):
-            index = EXPR.getText()
+            index = int(EXPR.getText())
         else:
             raise NotImplementedError()
 
@@ -499,4 +498,80 @@ class ExprListenerImpl(ExprListener):
 
         type_ = r_type
         anon_id = self.generator.bit_not(r_id, type_)
+        self.memory.stack.append((anon_id, type_))
+
+    # Enter a parse tree produced by ExprParser#array2dDeclaration.
+    def enterArray2dDeclaration(self, ctx: ExprParser.Array2dDeclarationContext):
+        pass
+
+    # Exit a parse tree produced by ExprParser#array2dDeclaration.
+    def exitArray2dDeclaration(self, ctx: ExprParser.Array2dDeclarationContext):
+        ID = ctx.ID().getText()
+        try:
+            rows, cols = ctx.INT()
+            rows = int(rows.getText())
+            cols = int(cols.getText())
+        except:
+            raise Exception("Invalid matrix declaration")
+        print(f"{rows=}")
+        print(f"{cols=}")
+        # SIZE = int(ctx.INT().getText())
+        TYPE = ctx.TYPE().getText()
+        type_ = Type.map_(TYPE)
+
+        self.memory.add_variable(
+            ID, TYPE, VarType.ARRAY_VAR, False, data=(type_, rows, cols)
+        )
+        self.generator.declare_arr2d(ID, type_, rows, cols)
+
+    # Enter a parse tree produced by ExprParser#array2dAssign.
+    def enterArray2dAssign(self, ctx: ExprParser.Array2dAssignContext):
+        pass
+
+    # Exit a parse tree produced by ExprParser#array2dAssign.
+    def exitArray2dAssign(self, ctx: ExprParser.Array2dAssignContext):
+        ID = ctx.ID().getText()
+        arr_val = self.memory.arrays.get(ID)
+        if arr_val.get("data", None) is None:
+            raise Exception("Array does not have data property")
+        type_, rows, cols = arr_val.get("data")
+        r, c = ctx.arrayIndexExpr()
+        r = r.expr()
+        c = c.expr()
+        VAL = ctx.expr()
+
+        if hasattr(r, "getText") and hasattr(c, "getText"):
+            r = int(r.getText())
+            c = int(c.getText())
+        else:
+            raise NotImplementedError()
+
+        val = None
+        if hasattr(VAL, "getText"):
+            val = VAL.getText()
+        else:
+            raise NotImplementedError()
+
+        self.generator.assign_arr2d(ID, type_, rows, cols, r, c, val)
+
+    # Enter a parse tree produced by ExprParser#array2dAccess.
+    def enterArray2dAccess(self, ctx: ExprParser.Array2dAccessContext):
+        pass
+
+    # Exit a parse tree produced by ExprParser#array2dAccess.
+    def exitArray2dAccess(self, ctx: ExprParser.Array2dAccessContext):
+        ID = ctx.ID().getText()
+        arr_val = self.memory.arrays.get(ID)
+        if arr_val.get("data", None) is None:
+            raise Exception("Array does not have data property")
+        type_, rows, cols = arr_val.get("data")
+        r, c = ctx.expr()
+
+        if hasattr(r, "getText") and hasattr(c, "getText"):
+            r = int(r.getText())
+            c = int(c.getText())
+        else:
+            raise NotImplementedError()
+
+        anon_id = self.generator.access_arr2d(ID, type_, rows, cols, r, c)
         self.memory.stack.append((anon_id, type_))

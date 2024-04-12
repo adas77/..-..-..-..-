@@ -2,14 +2,16 @@ grammar Expr;
 r: ( (stat | function | struct | while)? NEWLINE)*;
 
 stat:
-	TYPE? ID '=' expr						# assign
-	| TYPE ID '[' INT ']'					# arrayDeclaration
-	| ID '[' arrayIndexExpr ']' '=' expr	# arrayAssign
-	| 'print' '(' value ')'					# print
-	| 'read' '(' ID ')'						# read
-	| ID '=' '{' expr (',' expr)* '}'		# structAssign
-	| ID '.' structField '=' expr			# structFieldAssign
-	| COMMENT_SINGLELINE					# comment;
+	TYPE? ID '=' expr											# assign
+	| TYPE ID '[' INT ']'										# arrayDeclaration
+	| ID '[' arrayIndexExpr ']' '=' expr						# arrayAssign
+	| TYPE ID '[' INT ']' '[' INT ']'							# array2dDeclaration
+	| ID '[' arrayIndexExpr ']' '[' arrayIndexExpr ']' '=' expr	# array2dAssign
+	| 'print' '(' value ')'										# print
+	| 'read' '(' ID ')'											# read
+	| ID '=' '{' expr (',' expr)* '}'							# structAssign
+	| ID '.' structField '=' expr								# structFieldAssign
+	| COMMENT_SINGLELINE										# comment;
 
 expr:
 	term								# singleTerm
@@ -18,6 +20,7 @@ expr:
 	| '~' expr							# bitNot
 	| value								# single
 	| ID '[' expr ']'					# arrayAccess
+	| ID '[' expr ']' '[' expr ']'		# array2dAccess
 	| ID '.' structField				# structAccess
 	| ID '()'							# functionCall;
 
