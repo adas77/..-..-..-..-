@@ -125,6 +125,7 @@ class LLVMGenerator:
         self.main_text += f"%{id_} = load i32, i32* %{id2_}\n"
 
     def assign_arr(self, id_: str, type_: Type, size: int, index: int, val):
+        self._validate_arr_size(size, index)
         self.main_text += f"%{self.tmp} = getelementptr [{size} x {type_}], [{size} x {type_}]* %{id_}, i32 0, i32 {index}\n"
         self.main_text += f"store {type_} {val}, {type_}* %{self.tmp}\n"
         self.tmp += 1
@@ -134,11 +135,45 @@ class LLVMGenerator:
         self.main_text += f"%{id_} = alloca [{size} x {type_}], align 8\n"
 
     def access_arr(self, id_, type_: Type, size: int, index: int):
+        self._validate_arr_size(size, index)
         self.main_text += f"%{self.tmp} = getelementptr [{size} x {type_}], [{size} x {type_}]* %{id_}, i32 0, i32 {index}\n"
         self.tmp += 1
         self.main_text += f"%{self.tmp} = load {type_}, {type_}* %{self.tmp-1}\n"
         self.tmp += 1
         return f"%{self.tmp-1}"
+
+    def assign_arr2d(
+        self, id_: str, type_: Type, rows: int, cols: int, r: int, c: int, val
+    ):
+        self._validate_2d_size(rows, cols, r, c)
+        size = rows * cols
+        index = r * cols + c
+        self.main_text += f"%{self.tmp} = getelementptr [{size} x {type_}], [{size} x {type_}]* %{id_}, i32 0, i32 {index}\n"
+        self.main_text += f"store {type_} {val}, {type_}* %{self.tmp}\n"
+        self.tmp += 1
+        return f"%{self.tmp-1}"
+
+    def declare_arr2d(self, id_: str, type_: Type, rows: int, cols: int):
+        size = rows * cols
+        self.main_text += f"%{id_} = alloca [{size} x {type_}], align 8\n"
+
+    def access_arr2d(self, id_, type_: Type, rows: int, cols: int, r: int, c: int):
+        self._validate_2d_size(rows, cols, r, c)
+        size = rows * cols
+        index = r * cols + c
+        self.main_text += f"%{self.tmp} = getelementptr [{size} x {type_}], [{size} x {type_}]* %{id_}, i32 0, i32 {index}\n"
+        self.tmp += 1
+        self.main_text += f"%{self.tmp} = load {type_}, {type_}* %{self.tmp-1}\n"
+        self.tmp += 1
+        return f"%{self.tmp-1}"
+
+    def _validate_2d_size(self, rows: int, cols: int, r: int, c: int):
+        if r >= rows or c >= cols:
+            raise ValueError(f"Out of bounds for column: {c} row: {r}")
+
+    def _validate_arr_size(self, index: int, i: int):
+        if i >= index:
+            raise ValueError(f"Out of bounds for index: {i}")
 
     def declare_int(self, id_: str):
         self.main_text += f"%{id_} = alloca i32\n"
