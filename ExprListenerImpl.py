@@ -500,3 +500,14 @@ class ExprListenerImpl(ExprListener):
         type_ = r_type
         anon_id = self.generator.bit_not(r_id, type_)
         self.memory.stack.append((anon_id, type_))
+
+    # Exit a parse tree produced by ExprParser#logicalNot.
+    def exitLogicalNot(self, ctx: ExprParser.LogicalNotContext):
+        r: tuple[str, Type] = self.memory.stack.pop()
+        r_id, r_type = r
+        if r_type != Type.INT:
+            raise ValueError(f"Types: {r_type} must be INT")
+
+        type_ = r_type
+        anon_id = self.generator.logical_not(r_id, type_)
+        self.memory.stack.append((anon_id, type_))

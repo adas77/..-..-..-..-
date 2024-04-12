@@ -13,9 +13,13 @@ stat:
 
 expr:
 	term								# singleTerm
+	| term op = ('&&' | '||') expr		# logicalAndOr
 	| term op = ('+' | '-') expr		# addSub
 	| term op = ('&' | '|' | '^') expr	# bitAndOrXor
+	| term '!' expr						# logicalNot
 	| '~' expr							# bitNot
+	| expr op = ('&&' | '||') expr		# logicalAndOr
+	| '!' expr							# logicalNot
 	| value								# single
 	| ID '[' expr ']'					# arrayAccess
 	| ID '.' structField				# structAccess
@@ -69,6 +73,10 @@ BIT_AND: '&';
 BIT_OR: '|';
 BIT_XOR: '^';
 BIT_NOT: '~';
+
+LOGICAL_AND: '&&';
+LOGICAL_OR: '||';
+LOGICAL_NOT: '!';
 
 ID: ([a-zA-Z][a-zA-Z0-9]*);
 
