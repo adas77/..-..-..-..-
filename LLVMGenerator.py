@@ -24,20 +24,45 @@ class Type(Enum):
             raise ValueError(f"{type_} is not a valid type")
         return res
 
+    def get_zero_str(self) -> str:
+        zero_mappings: dict[Type, str] = {
+            Type.INT: "0",
+            Type.DOUBLE: "0.0",
+            Type.FLOAT: "0.0",
+        }
+        res = zero_mappings.get(self, None)
+        if res is None:
+            raise ValueError(f"Cannot get zero for type: {self}")
+        return res
+
+    def get_icmp(self) -> tuple[str, str]:
+        zero_mappings: dict[Type, tuple[str, str]] = {
+            Type.INT: ("icmp", "ne"),
+            Type.DOUBLE: ("fcmp", "one"),
+            Type.FLOAT: ("fcmp", "one"),
+        }
+        res = zero_mappings.get(self, None)
+        if res is None:
+            raise ValueError(f"Cannot get icmp operation for type: {self}")
+        return res
+
 
 class LLVMGenerator:
     def __init__(self, file_path: str = "./code.ll"):
         self.file_path = file_path
+
         self.main_text = ""
+        self.header_text = ""
+
         self.tmp = 1
         self.str_tmp = 1
         self.main_tmp = 1
+
         self.br = 0
         self.br_stack = []
-        self.header_text = ""
 
     def save(self):
-        with open(self.file_path, "w") as f:
+        with open(self.file_path, "w+") as f:
             f.write(self.generate())
 
     def scanf(self, id_: str, type_: Type):
@@ -321,3 +346,23 @@ class LLVMGenerator:
         else:
             self.main_text += f"%{id_} = alloca {type_}\n"
             return f"%{id_}"
+
+    def if_start(self):
+        self.br += 1
+        self.main_text += (
+            f"br i1 %{self.tmp-1}, label %true{self.br}, label %false{self.br}\n"
+        )
+        self.main_text += f"true{self.br}:\n"
+        self.br_stack.append(self.br)
+
+    def if_end(self):
+        br = self.br_stack.pop()
+        self.main_text += f"br label %false{br}\n"
+        self.main_text += f"false{br}:\n"
+
+    def icmp(self, id_: str, type_: Type):
+        zero = type_.get_zero_str()
+        compare, not_equal = type_.get_icmp()
+        self.main_text += f"%{self.tmp} = {compare} {not_equal} {type_} {id_}, {zero}\n"
+        self.tmp += 1
+        return f"%{self.tmp-1}"

@@ -9,6 +9,9 @@ class ExprListenerImpl(ExprListener):
         self.memory = Memory()
         self.generator = LLVMGenerator()
 
+    def exitR(self, ctx: ExprParser.RContext):
+        self.generator.save()
+
     def exitAssign(self, ctx: ExprParser.AssignContext):
         ID = ctx.ID().getText()
         TYPE = Type.map_(ctx.TYPE().getText()) if ctx.TYPE() is not None else None
@@ -273,3 +276,14 @@ class ExprListenerImpl(ExprListener):
 
         anon_id = self.generator.access_arr2d(ID, type_, rows, cols, r, c)
         self.memory.stack.append((anon_id, type_))
+
+    def exitIcmpExpr(self, ctx: ExprParser.IcmpExprContext):
+        r: tuple[str, Type] = self.memory.stack.pop()
+        r_id, r_type = r
+        self.generator.icmp(r_id, r_type)
+
+    def enterIfBlock(self, ctx: ExprParser.IfBlockContext):
+        self.generator.if_start()
+
+    def exitIfBlock(self, ctx: ExprParser.IfBlockContext):
+        self.generator.if_end()

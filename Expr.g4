@@ -1,5 +1,5 @@
 grammar Expr;
-r: ( (stat | function | struct | while)? NEWLINE)*;
+r: ( (stat | function | struct | while | if)? NEWLINE)*;
 
 stat:
 	TYPE? ID '=' expr											# assign
@@ -31,13 +31,14 @@ expr:
 structField: ID;
 
 arrayIndexExpr: expr;
-
+icmpExpr: expr;
 term:
 	factor							# singleFactor
 	| factor op = ('*' | '/') term	# mulDiv;
 factor: value | '(' expr ')';
 
-function: STARTFUNCTION functionParam functionBlock ENDFUNCTION;
+function:
+	STARTFUNCTION functionParam functionBlock ENDFUNCTION # function_;
 functionParam: ID;
 functionBlock: ( stat? NEWLINE)*;
 STARTFUNCTION: 'fn';
@@ -49,12 +50,12 @@ structBlock: (TYPE ID NEWLINE)*;
 STARTSTRUCT: 'struct';
 ENDSTRUCT: 'tcurts';
 
-while: STARTWHILE expr whileBlock ENDWHILE;
+while: STARTWHILE icmpExpr whileBlock ENDWHILE;
 whileBlock: ( stat? NEWLINE)*;
 STARTWHILE: 'while';
 ENDWHILE: 'elihw';
 
-if: STARTIF expr ifBlock ENDIF;
+if: STARTIF icmpExpr ifBlock ENDIF;
 ifBlock: ( stat? NEWLINE)*;
 STARTIF: 'if';
 ENDIF: 'fi';
