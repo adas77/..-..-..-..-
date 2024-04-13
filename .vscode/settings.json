@@ -1,4 +1,6 @@
 {
+  "python.analysis.ignore": ["**/g4"],
+  "python.analysis.typeCheckingMode": "standard",
   "[python]": {
     "editor.defaultFormatter": "ms-python.black-formatter",
     "editor.formatOnSave": true
