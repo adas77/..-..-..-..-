@@ -43,8 +43,6 @@ class Memory:
         return arr_data
 
     def get_variable(self, id_: str):
-        final_id: tuple[str, str, object] | None = None
-
         local_variable = self.local_variables.get(id_, None)
         global_variable = self.global_variables.get(id_, None)
 
