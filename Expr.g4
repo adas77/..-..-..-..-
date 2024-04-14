@@ -51,12 +51,12 @@ STARTSTRUCT: 'struct';
 ENDSTRUCT: 'tcurts';
 
 while: STARTWHILE icmpExpr whileBlock ENDWHILE;
-whileBlock: ( (stat? | if?) NEWLINE)*;
+whileBlock: ( (stat | if | while)? NEWLINE)*;
 STARTWHILE: 'while';
 ENDWHILE: 'elihw';
 
 if: STARTIF icmpExpr ifBlock ENDIF;
-ifBlock: ( (stat? | while?) NEWLINE)*;
+ifBlock: ( (stat | if | while)? NEWLINE)*;
 STARTIF: 'if';
 ENDIF: 'fi';
 
