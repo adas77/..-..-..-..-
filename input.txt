@@ -7,6 +7,14 @@ while i+2
     b = 3
     print(i)
     print("---")
+    if 1
+        print("Jestem if w while")
+        iter = 5
+        while iter
+            print("Jestem while w if w while")
+            iter = iter - 1
+        elihw
+    fi
 elihw
 
 while 0
