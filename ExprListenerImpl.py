@@ -278,7 +278,8 @@ class ExprListenerImpl(ExprListener):
         self.memory.stack.append((anon_id, type_))
 
     def exitIcmpExpr(self, ctx: ExprParser.IcmpExprContext):
-        r: tuple[str, Type] = self.memory.stack.pop()
+        # r: tuple[str, Type] = self.memory.stack.pop()
+        r: tuple[str, Type] = self.memory.stack[-1]
         r_id, r_type = r
         self.generator.icmp(r_id, r_type)
 
@@ -287,3 +288,12 @@ class ExprListenerImpl(ExprListener):
 
     def exitIfBlock(self, ctx: ExprParser.IfBlockContext):
         self.generator.if_end()
+
+    def enterWhileBlock(self, ctx: ExprParser.WhileBlockContext):
+        self.generator.while_start_block()
+
+    def exitWhileBlock(self, ctx: ExprParser.WhileBlockContext):
+        self.generator.while_end()
+
+    def enterWhile(self, ctx: ExprParser.WhileContext):
+        self.generator.while_start()

@@ -2,6 +2,11 @@ from enum import Enum
 import struct
 
 
+class Instruction(Enum):
+    WHILE = ("while", "while_body", "elihw")
+    IF = ("if", "if_body", "fi")
+
+
 class Type(Enum):
     INT = ("i32",)
     DOUBLE = ("double",)
@@ -60,6 +65,9 @@ class LLVMGenerator:
 
         self.br = 0
         self.br_stack = []
+
+        self.br_while = 0
+        self.br_while_stack = []
 
     def save(self):
         with open(self.file_path, "w+") as f:
@@ -348,17 +356,40 @@ class LLVMGenerator:
             return f"%{id_}"
 
     def if_start(self):
+        l, _, r = Instruction.IF.value
         self.br += 1
         self.main_text += (
-            f"br i1 %{self.tmp-1}, label %true{self.br}, label %false{self.br}\n"
+            f"br i1 %{self.tmp-1}, label %{l}{self.br}, label %{r}{self.br}\n"
         )
-        self.main_text += f"true{self.br}:\n"
+        self.main_text += f"{l}{self.br}:\n"
         self.br_stack.append(self.br)
 
     def if_end(self):
+        _, _, r = Instruction.IF.value
         br = self.br_stack.pop()
-        self.main_text += f"br label %false{br}\n"
-        self.main_text += f"false{br}:\n"
+        self.main_text += f"br label %{r}{br}\n"
+        self.main_text += f"{r}{br}:\n"
+
+    def while_start_block(self):
+        l, m, r = Instruction.WHILE.value
+        br_while = self.br_while_stack[-1]
+        self.main_text += (
+            f"br i1 %{self.tmp-1}, label %{m}{br_while}, label %{r}{br_while}\n"
+        )
+        self.main_text += f"{m}{br_while}:\n"
+
+    def while_end(self):
+        l, m, r = Instruction.WHILE.value
+        br_while = self.br_while_stack.pop()
+        self.main_text += f"br label %{l}{br_while}\n"
+        self.main_text += f"{r}{br_while}:\n"
+
+    def while_start(self):
+        l, m, r = Instruction.WHILE.value
+        self.br_while += 1
+        self.main_text += f"br label %{l}{self.br_while}\n"
+        self.main_text += f"{l}{self.br_while}:\n"
+        self.br_while_stack.append(self.br_while)
 
     def icmp(self, id_: str, type_: Type):
         zero = type_.get_zero_str()
