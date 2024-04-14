@@ -10,6 +10,9 @@ while i+2
     if 1
         print("Jestem if w while")
         iter = 5
+        if 1
+            print("Jestem if w if")
+        fi            
         while iter
             print("Jestem while w if w while")
             iter = iter - 1
