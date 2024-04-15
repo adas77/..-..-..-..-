@@ -1,5 +1,17 @@
 
 
+# fn fname (param1 : int, param2 : int) :int
+#     xdd = param1 
+#     print(xdd)
+#     return xdd
+# nf
+# 
+# qwerty = 56787
+# res = fname(1, qwerty)
+
+randomstring = "hello world"
+print(randomstring)
+
 i = 10
 while i+2
     print(i)
@@ -56,3 +68,7 @@ print(xd)
 print(xd2)
 a = (1 & 3)
 print(a)
+bbb = a + 2 + 4 + 6 - 1
+ccc = 1.0 - 2.001
+print(bbb)
+print(ccc)

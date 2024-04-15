@@ -26,7 +26,7 @@ expr:
 	| ID '[' expr ']'					# arrayAccess
 	| ID '[' expr ']' '[' expr ']'		# array2dAccess
 	| ID '.' structField				# structAccess
-	| ID '()'							# functionCall;
+	| ID functionArgsCall				# functionCall;
 
 structField: ID;
 
@@ -38,9 +38,12 @@ term:
 factor: value | '(' expr ')';
 
 function:
-	STARTFUNCTION functionParam functionBlock ENDFUNCTION # function_;
+	STARTFUNCTION functionParam functionArgs ':' TYPE functionBlock functionReturn ENDFUNCTION;
 functionParam: ID;
 functionBlock: ( stat? NEWLINE)*;
+functionReturn: ( 'return' ID NEWLINE+)?;
+functionArgs: '(' (ID ':' TYPE (',' ID ':' TYPE)*)? ')';
+functionArgsCall: '(' (value (',' value)*)? ')';
 STARTFUNCTION: 'fn';
 ENDFUNCTION: 'nf';
 
@@ -67,7 +70,7 @@ value:
 	| STR		# str
 	| FLOAT		# float;
 
-TYPE: 'int' | 'double' | 'string' | 'float';
+TYPE: 'int' | 'double' | 'string' | 'float' | 'void';
 MUL: '*'; // assigns token name to '*' used above in grammar
 DIV: '/';
 ADD: '+';

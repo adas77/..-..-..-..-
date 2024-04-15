@@ -17,10 +17,6 @@ class ExprListenerImpl(ExprListener):
         TYPE = Type.map_(ctx.TYPE().getText()) if ctx.TYPE() is not None else None
         locked_type = TYPE is not None
         val_name, val_type = self.memory.stack.pop()
-
-        global_char, id_, variable = self.memory.set_variable(
-            self.generator, ID, val_type, locked_type
-        )
         global_char, id_, variable = self.memory.set_variable(
             self.generator, ID, val_type, locked_type
         )
@@ -131,26 +127,35 @@ class ExprListenerImpl(ExprListener):
         STR = ctx.STR().getText()
         STR = STR[1:-1]
         anon_id = self.generator.assign_anonymous(STR, Type.STR)
-        anon_id = self.generator.load(anon_id, Type.STR, len(STR))
+        anon_id = self.generator.load(anon_id, Type.STR, str_length=len(STR))
         self.memory.stack.append((anon_id, Type.STR))
 
     def exitId(self, ctx: ExprParser.IdContext):
         ID = ctx.ID().getText()
         (global_char, id_, variable) = self.memory.get_variable(ID)
-        type_ = variable["type_"]
-        anon_id = ""
-        if type_ == Type.INT:
-            anon_id = self.generator.load(global_char + id_, Type.INT)
-        elif type_ == Type.DOUBLE:
-            anon_id = self.generator.load(global_char + id_, Type.DOUBLE)
-        elif type_ == Type.FLOAT:
-            anon_id = self.generator.load(global_char + id_, Type.FLOAT)
-        elif type_ == Type.STR:
-            anon_id = self.generator.load(
-                global_char + id_, Type.STR, 12  # variable["data"]["length"] TODO
-            )
-        else:
-            raise Exception(f"Unknown variable type: {type_}")
+        type_ = variable.get("type_", None)
+        if type_ is None:
+            raise ValueError("Variable does not have a type_ property")
+        # print(f"{type_=}")
+        # type_ = Type.map_(type_)
+        anon_id = self.generator.load(f"{global_char}{id_}", type_, str_length=12)
+        # variable["data"]["length"] TODO
+
+        # anon_id = ""
+        # if type_ == Type.INT:
+        #     anon_id = self.generator.load(global_char + id_, Type.INT)
+        # elif type_ == Type.DOUBLE:
+        #     anon_id = self.generator.load(global_char + id_, Type.DOUBLE)
+        # elif type_ == Type.FLOAT:
+        #     anon_id = self.generator.load(global_char + id_, Type.FLOAT)
+        # elif type_ == Type.STR:
+        #     anon_id = self.generator.load(
+        #         global_char + id_,
+        #         Type.STR,
+        #         str_length=12,  # variable["data"]["length"] TODO
+        #     )
+        # else:
+        #     raise Exception(f"Unknown variable type: {type_}")
         self.memory.stack.append((anon_id, type_))
 
     def exitArrayAccess(self, ctx: ExprParser.ArrayAccessContext):
@@ -297,3 +302,63 @@ class ExprListenerImpl(ExprListener):
 
     def enterWhile(self, ctx: ExprParser.WhileContext):
         self.generator.while_start()
+
+    def enterFunction(self, ctx: ExprParser.FunctionContext):
+        id_ = ctx.functionParam().ID().getText()
+        type_ = Type.map_(ctx.TYPE().getText())
+        args = [
+            (str(id_.getText()), Type.map_(type_.getText()))
+            for id_, type_ in zip(ctx.functionArgs().ID(), ctx.functionArgs().TYPE())
+        ]
+        self.generator.fn_start(id_, type_, args)
+        self.memory.add(id_, type_, VarType.FN_VAR, True, (type_, args))
+        for id_, type_ in args:
+            self.memory.add(id_, type_, VarType.GLOBAL_VAR, True)
+
+    def exitFunction(self, ctx: ExprParser.FunctionContext):
+        type_ = Type.map_(ctx.TYPE().getText())
+        id_ = (
+            ctx.functionReturn().ID().getText()
+            if ctx.functionReturn().ID() is not None
+            else None
+        )
+        # TODO: validate return type match defined
+        self.generator.fn_end(id_, type_)
+
+    def exitFunctionCall(self, ctx: ExprParser.FunctionCallContext):
+        id_ = ctx.ID().getText()
+
+        value = self.memory.get(id_, VarType.FN_VAR)
+        if value is None:
+            raise ValueError(f"Function with ID: {id_} does not exist")
+        data = value.get("data", None)
+        if data is None:
+            raise ValueError("Function with ID does not have data")
+        type_returned, args_ = data
+        args = [
+            (str(id_or_val.getText()), type_, param_name)
+            for id_or_val, (param_name, type_) in zip(
+                ctx.functionArgsCall().value(), args_
+            )
+        ]
+
+        print(f"{args=}\n")
+        for i, (id_or_val, type_, _param_name) in enumerate(args):
+            variable = self.memory.global_variables.get(id_or_val, None)
+            if variable is None:
+                id_declared = self.generator.declare_variable(id_or_val, type_, False)
+            else:
+                self.generator.assign(id_or_val, (id_or_val, type_))
+                #
+                # context_sign, id_, variable = self.memory.set_variable(
+                #     self.generator, id_or_val, type_
+                # )
+                pass
+                # self.memory.add(id_or_val, type_, VarType.GLOBAL_VAR, False)
+                # declared_id = self.generator.declare_variable(param_name, type_, True)
+                # args[i] = (declared_id, type_, param_name)
+        # print(f"{args=}\n")
+
+        # self.generator.fn_call(
+        #     id_, type_returned, [(type_, id_) for id_, type_ in args_]
+        # )

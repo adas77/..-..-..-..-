@@ -20,9 +20,9 @@ class Memory:
         self.arrays: dict[str, dict] = {}
 
         self.stack: list[tuple[str, Type]] = []
-        self.global_context: bool = True
-        self.value_: tuple[str, Type] | None = None
-        self.function_: str = ""
+        self.__global_context: bool = True  # FIXME: __global_context is never mutated
+        # self.value_: tuple[str, Type] | None = None
+        # self.function_: str = ""
 
     def get(self, id_: str, var_type: VarType):
         var_type_dict = self._get_var_type(var_type)
@@ -77,41 +77,26 @@ class Memory:
         assign_type: Type,
         locked_type: bool = False,
     ):
-        final_id: tuple[str, str, dict] | None = None
-
-        if self.global_context:
+        context_sign, dict_variables = (
+            ("@", self.global_variables)
+            if self.__global_context
+            else ("%", self.local_variables)
+        )
+        variable = dict_variables.get(id_, None)
+        if variable is None:
+            self.add(id_, assign_type, VarType.GLOBAL_VAR, locked_type)
+            generator.declare_variable(id_, assign_type, self.__global_context)
             variable = self.global_variables.get(id_, None)
             if variable is None:
-                self.add(id_, assign_type, VarType.GLOBAL_VAR, locked_type)
-                generator.declare_variable(id_, assign_type, is_global=True)
-                variable = self.global_variables.get(id_, None)
-            else:
-                if variable["locked_type"]:
-                    if variable["type_"] != assign_type:
-                        raise ValueError(
-                            f"Types: {variable['type_']} must match {assign_type}"
-                        )
-
-            if variable is None:
                 raise Exception("variable is None")
-            final_id = ("@", id_, variable)
         else:
-            variable = self.local_variables.get(id_, None)
-            if variable is None:
-                self.add(id_, assign_type, VarType.LOCAL_VAR, locked_type)
-                generator.declare_variable(id_, assign_type, is_global=False)
-                variable = self.local_variables.get(id_, None)
-            else:
-                if variable["locked_type"]:
-                    if variable["type_"] != assign_type:
-                        raise ValueError(
-                            f"Types: {variable['type_']} must match {assign_type}"
-                        )
-            if variable is None:
-                raise Exception("variable is None")
-            final_id = ("%", id_, variable)
+            if variable["locked_type"]:
+                if variable["type_"] != assign_type:
+                    raise ValueError(
+                        f"Types: {variable['type_']} must match {assign_type}"
+                    )
 
-        return final_id
+        return context_sign, id_, variable
 
     def _get_var_type(self, var_type: VarType) -> dict | None:
         var_type_mappings = {
