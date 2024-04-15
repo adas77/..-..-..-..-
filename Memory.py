@@ -77,14 +77,14 @@ class Memory:
         assign_type: Type,
         locked_type: bool = False,
     ):
-        context_sign, dict_variables = (
-            ("@", self.global_variables)
+        context_sign, var_type, dict_variables = (
+            ("@", VarType.GLOBAL_VAR, self.global_variables)
             if self.__global_context
-            else ("%", self.local_variables)
+            else ("%", VarType.LOCAL_VAR, self.local_variables)
         )
         variable = dict_variables.get(id_, None)
         if variable is None:
-            self.add(id_, assign_type, VarType.GLOBAL_VAR, locked_type)
+            self.add(id_, assign_type, var_type, locked_type)
             generator.declare_variable(id_, assign_type, self.__global_context)
             variable = self.global_variables.get(id_, None)
             if variable is None:
