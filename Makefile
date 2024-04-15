@@ -32,3 +32,6 @@ cl:
 r: gen run
 
 c: cl gen run ll
+
+l: 
+	lli code.ll
