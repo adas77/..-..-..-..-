@@ -1,6 +1,6 @@
 from enum import Enum
 
-from LLVMGenerator import Type
+from LLVMGenerator import LLVMGenerator, Type
 
 
 class VarType(Enum):
@@ -13,15 +13,15 @@ class VarType(Enum):
 
 class Memory:
     def __init__(self):
-        self.global_variables: dict[str, object] = {}
-        self.local_variables: dict[str, object] = {}
-        self.functions: dict[str, object] = {}
-        self.structs: dict[str, object] = {}
-        self.arrays: dict[str, object] = {}
+        self.global_variables: dict[str, dict] = {}
+        self.local_variables: dict[str, dict] = {}
+        self.functions: dict[str, dict] = {}
+        self.structs: dict[str, dict] = {}
+        self.arrays: dict[str, dict] = {}
 
         self.stack: list[tuple[str, Type]] = []
         self.global_context: bool = True
-        self.value_: tuple[str, Type] = None
+        self.value_: tuple[str, Type] | None = None
         self.function_: str = ""
 
     def get(self, id_: str, var_type: VarType):
@@ -33,8 +33,30 @@ class Memory:
             raise ValueError(f"Variable with ID: {id_} does not exist")
         return value
 
-    def add_variable(
-        self, id_: str, type_: str, var_type: VarType, locked_type: bool, data=None
+    def get_arr(self, id_: str):
+        arr_val = self.arrays.get(id_)
+        if arr_val is None:
+            raise ValueError(f"Array with ID: {id_} does not exist")
+        arr_data = arr_val.get("data", None)
+        if arr_data is None:
+            raise Exception("Array does not have data property")
+        return arr_data
+
+    def get_variable(self, id_: str):
+        local_variable = self.local_variables.get(id_, None)
+        global_variable = self.global_variables.get(id_, None)
+
+        if local_variable is not None:
+            final_id = ("%", id_, local_variable)
+        elif global_variable is not None:
+            final_id = ("@", id_, global_variable)
+        else:
+            raise ValueError(f"{id_} not found")
+
+        return final_id
+
+    def add(
+        self, id_: str, type_: Type, var_type: VarType, locked_type: bool, data=None
     ):
         var_type_dict = self._get_var_type(var_type)
         if var_type_dict is None:
@@ -47,6 +69,49 @@ class Memory:
             "locked_type": locked_type,
             "data": data,
         }
+
+    def set_variable(
+        self,
+        generator: LLVMGenerator,
+        id_: str,
+        assign_type: Type,
+        locked_type: bool = False,
+    ):
+        final_id: tuple[str, str, dict] | None = None
+
+        if self.global_context:
+            variable = self.global_variables.get(id_, None)
+            if variable is None:
+                self.add(id_, assign_type, VarType.GLOBAL_VAR, locked_type)
+                generator.declare_variable(id_, assign_type, is_global=True)
+                variable = self.global_variables.get(id_, None)
+            else:
+                if variable["locked_type"]:
+                    if variable["type_"] != assign_type:
+                        raise ValueError(
+                            f"Types: {variable['type_']} must match {assign_type}"
+                        )
+
+            if variable is None:
+                raise Exception("variable is None")
+            final_id = ("@", id_, variable)
+        else:
+            variable = self.local_variables.get(id_, None)
+            if variable is None:
+                self.add(id_, assign_type, VarType.LOCAL_VAR, locked_type)
+                generator.declare_variable(id_, assign_type, is_global=False)
+                variable = self.local_variables.get(id_, None)
+            else:
+                if variable["locked_type"]:
+                    if variable["type_"] != assign_type:
+                        raise ValueError(
+                            f"Types: {variable['type_']} must match {assign_type}"
+                        )
+            if variable is None:
+                raise Exception("variable is None")
+            final_id = ("%", id_, variable)
+
+        return final_id
 
     def _get_var_type(self, var_type: VarType) -> dict | None:
         var_type_mappings = {

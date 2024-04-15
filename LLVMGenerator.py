@@ -2,6 +2,11 @@ from enum import Enum
 import struct
 
 
+class Instruction(Enum):
+    WHILE = ("while", "while_body", "elihw")
+    IF = ("if", "if_body", "fi")
+
+
 class Type(Enum):
     INT = ("i32",)
     DOUBLE = ("double",)
@@ -11,6 +16,7 @@ class Type(Enum):
     def __str__(self):
         return f"{self.value[0]}"
 
+    @staticmethod
     def map_(type_: str):
         types_mappings = {
             "int": Type.INT,
@@ -23,28 +29,49 @@ class Type(Enum):
             raise ValueError(f"{type_} is not a valid type")
         return res
 
+    def get_zero_str(self) -> str:
+        zero_mappings: dict[Type, str] = {
+            Type.INT: "0",
+            Type.DOUBLE: "0.0",
+            Type.FLOAT: "0.0",
+        }
+        res = zero_mappings.get(self, None)
+        if res is None:
+            raise ValueError(f"Cannot get zero for type: {self}")
+        return res
+
+    def get_icmp(self) -> tuple[str, str]:
+        zero_mappings: dict[Type, tuple[str, str]] = {
+            Type.INT: ("icmp", "ne"),
+            Type.DOUBLE: ("fcmp", "one"),
+            Type.FLOAT: ("fcmp", "one"),
+        }
+        res = zero_mappings.get(self, None)
+        if res is None:
+            raise ValueError(f"Cannot get icmp operation for type: {self}")
+        return res
+
 
 class LLVMGenerator:
     def __init__(self, file_path: str = "./code.ll"):
         self.file_path = file_path
+
         self.main_text = ""
+        self.header_text = ""
+
         self.tmp = 1
         self.str_tmp = 1
         self.main_tmp = 1
+
         self.br = 0
         self.br_stack = []
-        self.header_text = ""
+
+        self.br_while = 0
+        self.br_while_stack = []
 
     def save(self):
-        with open(self.file_path, "w") as f:
+        with open(self.file_path, "w+") as f:
             f.write(self.generate())
-
-    # def printf_str(self, id_: str, len: int):
-    #     self.main_text += f"%{self.tmp} = getelementptr inbounds [{len+1} x i8], [{len+1} x i8]* @{id_}, i32 0, i32 0\n"
-    #     self.tmp += 1
-    #     self.main_text += "%"+str(self.tmp) + " = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @strstr, i32 0, i32 0), i8* %"+str(  # change strp to str argument for others and custom printfs
-    #         self.tmp-1)+")\n"
-    #     self.tmp += 1
 
     def scanf(self, id_: str, type_: Type):
         if type_ == Type.INT:
@@ -79,12 +106,6 @@ class LLVMGenerator:
             raise ValueError(f"Type {type_} printing is not supported")
         self.tmp += 1
 
-    # def assign_int_anonymous(self, value: int)->str:
-    #     self.main_text += f"%{self.tmp} = alloca i32\n"
-    #     self.tmp += 1
-    #     self.main_text += f"store i32 {value}, i32* %{self.tmp-1}\n"
-    #     return f"%{self.tmp-1}"
-
     def assign_anonymous(self, value, type_: Type) -> str:
         type_stringified = type_.value[0]
         self.main_text += f"%{self.tmp} = alloca {type_stringified}\n"
@@ -118,13 +139,13 @@ class LLVMGenerator:
             )
         return f"%{self.tmp-1}"
 
-    def assign_int(self, id_: str, value: int):
+    def assign_int(self, id_: str, value: str):
         self.main_text += f"store i32 {value}, i32* {id_}\n"
 
-    def assign_double(self, id_: str, value: float):
+    def assign_double(self, id_: str, value: str):
         self.main_text += f"store double {value}, double* {id_}\n"
 
-    def assign_float(self, id_: str, value: float):
+    def assign_float(self, id_: str, value: str):
         self.main_text += f"store float {value}, float* {id_}\n"
 
     def assign_id_int(self, id_: str, id2_: str):
@@ -257,7 +278,6 @@ class LLVMGenerator:
         mul = ops.get(type_, None)
         if mul is None:
             raise ValueError(f"Type {type_} multiplication is not supported")
-        type_ = type_.value[0]
         self.main_text += f"%{self.tmp} = {mul} {type_} {id_1}, {id_2}\n"
         self.tmp += 1
         return f"%{self.tmp-1}"
@@ -268,13 +288,11 @@ class LLVMGenerator:
         return f"%{self.tmp-1}"
 
     def div(self, id_1: str, id_2: str, type_: Type) -> str:
-
         ops = {
             Type.DOUBLE: "fdiv",
             Type.INT: "sdiv",
             Type.FLOAT: "fdiv",
         }
-        print(f"Type: {type_} ops: {ops}")
         div = ops.get(type_, None)
         if div is None:
             raise ValueError(f"Type {type_} is not supported")
@@ -302,7 +320,10 @@ class LLVMGenerator:
         self.tmp += 1
         return f"%{self.tmp-1}"
 
-    def assign(self, id_: str, value_: "tuple[str,Type]"):
+    def logical_not(self, r_id: str, type_: Type) -> str:
+        raise NotImplementedError()
+
+    def assign(self, id_: str, value_: tuple[str, Type]):
         if value_[1] == Type.INT:
             self.assign_int(id_, value_[0])
         elif value_[1] == Type.DOUBLE:
@@ -326,7 +347,6 @@ class LLVMGenerator:
             # return f"%{self.tmp-1}"
             return id_
 
-        type_ = type_.value[0]
         self.main_text += f"%{self.tmp} = load {type_}, {type_}* {id_}\n"
         self.tmp += 1
         return f"%{self.tmp-1}"
@@ -347,3 +367,46 @@ class LLVMGenerator:
         else:
             self.main_text += f"%{id_} = alloca {type_}\n"
             return f"%{id_}"
+
+    def if_start(self):
+        l, _, r = Instruction.IF.value
+        self.br += 1
+        self.main_text += (
+            f"br i1 %{self.tmp-1}, label %{l}{self.br}, label %{r}{self.br}\n"
+        )
+        self.main_text += f"{l}{self.br}:\n"
+        self.br_stack.append(self.br)
+
+    def if_end(self):
+        _, _, r = Instruction.IF.value
+        br = self.br_stack.pop()
+        self.main_text += f"br label %{r}{br}\n"
+        self.main_text += f"{r}{br}:\n"
+
+    def while_start_block(self):
+        l, m, r = Instruction.WHILE.value
+        br_while = self.br_while_stack[-1]
+        self.main_text += (
+            f"br i1 %{self.tmp-1}, label %{m}{br_while}, label %{r}{br_while}\n"
+        )
+        self.main_text += f"{m}{br_while}:\n"
+
+    def while_end(self):
+        l, m, r = Instruction.WHILE.value
+        br_while = self.br_while_stack.pop()
+        self.main_text += f"br label %{l}{br_while}\n"
+        self.main_text += f"{r}{br_while}:\n"
+
+    def while_start(self):
+        l, m, r = Instruction.WHILE.value
+        self.br_while += 1
+        self.main_text += f"br label %{l}{self.br_while}\n"
+        self.main_text += f"{l}{self.br_while}:\n"
+        self.br_while_stack.append(self.br_while)
+
+    def icmp(self, id_: str, type_: Type):
+        zero = type_.get_zero_str()
+        compare, not_equal = type_.get_icmp()
+        self.main_text += f"%{self.tmp} = {compare} {not_equal} {type_} {id_}, {zero}\n"
+        self.tmp += 1
+        return f"%{self.tmp-1}"
