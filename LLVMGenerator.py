@@ -53,6 +53,11 @@ class LLVMGenerator:
             self.main_text += f"%{self.tmp} = call i32 (i8*, ...) @__isoc99_scanf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @str_double, i32 0, i32 0),double* {id_})\n"
         elif type_ == Type.FLOAT:
             self.main_text += f"%{self.tmp} = call i32 (i8*, ...) @__isoc99_scanf(i8* getelementptr inbounds ([3 x i8], [3 x i8]* @str_float, i32 0, i32 0),float* {id_})\n"
+        elif type_ == Type.STR:
+            self.main_text += f"%{self.tmp} = alloca i8, i32 100\n"
+            self.tmp += 1
+            self.main_text += f"%{self.tmp} = call i32 (i8*, ...) @__isoc99_scanf(i8* getelementptr inbounds ([3 x i8], [3 x i8]* @str_string, i32 0, i32 0),i8* %{self.tmp-1})\n"
+            self.main_text += f"store i8* %{self.tmp-1}, i8** {id_}\n"
         else:
             raise ValueError(f"Type {type_} scanning is not supported")
         self.tmp += 1
@@ -67,7 +72,9 @@ class LLVMGenerator:
             self.tmp += 1
             self.main_text += f"%{self.tmp} = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @str_float_newline, i32 0, i32 0),double %{self.tmp-1})\n"
         elif type_ == Type.STR:
-            self.main_text += f"%{self.tmp} = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @str_string_newline, i32 0, i32 0),i8* {id_})\n"
+            self.main_text += f"%{self.tmp} = load i8*, i8** {id_}\n"
+            self.tmp += 1
+            self.main_text += f"%{self.tmp} = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @str_string_newline, i32 0, i32 0),i8* %{self.tmp-1})\n"
         else:
             raise ValueError(f"Type {type_} printing is not supported")
         self.tmp += 1
@@ -103,6 +110,8 @@ class LLVMGenerator:
             str_length = len(str(value))
             self.main_text += f"%{self.tmp} = getelementptr inbounds [{str_length+1} x i8], [{str_length+1} x i8]* {global_string_id}, i32 0, i32 0\n"
             self.tmp += 1
+            self.main_text += f"store i8* %{self.tmp-1}, i8** %{self.tmp-2}\n"
+            return f"%{self.tmp-2}"
         else:
             self.main_text += (
                 f"store {type_stringified} {value}, {type_stringified}* %{self.tmp-1}\n"
@@ -202,7 +211,7 @@ class LLVMGenerator:
         text += '@str_float = constant [3 x i8] c"%f\\00"\n'
 
         text += self.header_text
-        text += "define i32 @main() nounwind{\n"
+        text += "\ndefine i32 @main() nounwind{\n"
         text += self.main_text
         text += "ret i32 0 }\n"
         return text
@@ -301,7 +310,10 @@ class LLVMGenerator:
         elif value_[1] == Type.FLOAT:
             self.assign_float(id_, value_[0])
         elif value_[1] == Type.STR:
-            self.main_text += f"store i8* {value_[0]}, i8** {id_}\n"
+            # load i8*, i8** %1
+            self.main_text += f"%{self.tmp} = load i8*, i8** {value_[0]}\n"
+            self.tmp += 1
+            self.main_text += f"store i8* %{self.tmp-1}, i8** {id_}\n"
         else:
             raise ValueError(f"Type {value_[1]} assigning is not supported")
 
@@ -311,7 +323,8 @@ class LLVMGenerator:
             # self.main_text += f"%{self.tmp} = getelementptr inbounds [{str_length+1} x i8], [{str_length+1} x i8]* {id_}, i32 0, i32 0\n"
             # self.tmp += 1
             # return f"%{self.tmp-1}"
-            return f"%{self.tmp-1}"
+            # return f"%{self.tmp-1}"
+            return id_
 
         type_ = type_.value[0]
         self.main_text += f"%{self.tmp} = load {type_}, {type_}* {id_}\n"
