@@ -136,26 +136,8 @@ class ExprListenerImpl(ExprListener):
         type_ = variable.get("type_", None)
         if type_ is None:
             raise ValueError("Variable does not have a type_ property")
-        # print(f"{type_=}")
-        # type_ = Type.map_(type_)
         anon_id = self.generator.load(f"{global_char}{id_}", type_, str_length=12)
-        # variable["data"]["length"] TODO
-
-        # anon_id = ""
-        # if type_ == Type.INT:
-        #     anon_id = self.generator.load(global_char + id_, Type.INT)
-        # elif type_ == Type.DOUBLE:
-        #     anon_id = self.generator.load(global_char + id_, Type.DOUBLE)
-        # elif type_ == Type.FLOAT:
-        #     anon_id = self.generator.load(global_char + id_, Type.FLOAT)
-        # elif type_ == Type.STR:
-        #     anon_id = self.generator.load(
-        #         global_char + id_,
-        #         Type.STR,
-        #         str_length=12,  # variable["data"]["length"] TODO
-        #     )
-        # else:
-        #     raise Exception(f"Unknown variable type: {type_}")
+        # TODO: variable["data"]["length"]
         self.memory.stack.append((anon_id, type_))
 
     def exitArrayAccess(self, ctx: ExprParser.ArrayAccessContext):
@@ -283,7 +265,6 @@ class ExprListenerImpl(ExprListener):
         self.memory.stack.append((anon_id, type_))
 
     def exitIcmpExpr(self, ctx: ExprParser.IcmpExprContext):
-        # r: tuple[str, Type] = self.memory.stack.pop()
         r: tuple[str, Type] = self.memory.stack[-1]
         r_id, r_type = r
         self.generator.icmp(r_id, r_type)
@@ -342,6 +323,7 @@ class ExprListenerImpl(ExprListener):
             )
         ]
 
+        # FIXME:
         print(f"{args=}\n")
         for i, (id_or_val, type_, _param_name) in enumerate(args):
             variable = self.memory.global_variables.get(id_or_val, None)
