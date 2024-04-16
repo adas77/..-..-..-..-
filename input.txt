@@ -85,9 +85,47 @@ int xd = arr[1][1]
 int xd2 = arr2[1]
 print(xd)
 print(xd2)
-a = (1 & 3)
+
+# logic
+a = (1 & 0)
+print("a")
 print(a)
 bbb = a + 2 + 4 + 6 - 1
 ccc = 1.0 - 2.001
 print(bbb)
 print(ccc)
+a = (1 | 0)
+print("a")
+print(a)
+
+# error index
+#e = arr[22222][22222]
+
+# floats reading
+int x = 0.0f
+read(x)
+x = x + 1.3f
+print("x")
+print(x)
+
+hello = "Dobry den"
+print(hello)
+
+# logical ops
+aa = 11
+bb = 21
+cc = aa & 21
+print("cc")
+print(cc)
+
+# doubles
+d = (0.001 + 1.0) / 3.14
+# error wrong types
+#d = d * 1.0f
+ #d = 1 + "xxx"
+print("d")
+print(d)
+
+string s = "xd"
+read(s)
+print(s)

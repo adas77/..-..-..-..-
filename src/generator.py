@@ -20,9 +20,9 @@ class LLVMGenerator:
             f.write(self.text_generator.generate())
 
     def scanf(self, id_: str, type_: Type):
-        self.text_generator.append_text(
-            f"%{self.text_generator.get_incremented()} = call i32 (i8*, ...) @__isoc99_scanf(i8* getelementptr inbounds ([3 x i8], [3 x i8]* @str_int, i32 0, i32 0),i32* {id_})"
-        )
+        # self.text_generator.append_text(
+        #     f"%{self.text_generator.get_incremented()} = call i32 (i8*, ...) @__isoc99_scanf(i8* getelementptr inbounds ([3 x i8], [3 x i8]* @str_int, i32 0, i32 0),i32* {id_})"
+        # )
 
         if type_ == Type.INT:
             self.text_generator.append_text(
@@ -36,6 +36,23 @@ class LLVMGenerator:
             self.text_generator.append_text(
                 f"%{self.text_generator.get_incremented()} = call i32 (i8*, ...) @__isoc99_scanf(i8* getelementptr inbounds ([3 x i8], [3 x i8]* @str_float, i32 0, i32 0),float* {id_})"
             )
+        elif type_ == Type.STR:
+            # self.main_text += f"%{self.tmp} = alloca i8, i32 100\n"
+            # self.tmp += 1
+            # self.main_text += f"%{self.tmp} = call i32 (i8*, ...) @__isoc99_scanf(i8* getelementptr inbounds ([3 x i8], [3 x i8]* @str_string, i32 0, i32 0),i8* %{self.tmp-1})\n"
+            # self.main_text += f"store i8* %{self.tmp-1}, i8** {id_}\n"
+
+            self.text_generator.append_text(
+                f"%{self.text_generator.get_incremented()} = alloca i8, i32 100"
+            )
+            self.text_generator.increment()
+            self.text_generator.append_text(
+                f"%{self.text_generator.get_incremented()} = call i32 (i8*, ...) @__isoc99_scanf(i8* getelementptr inbounds ([3 x i8], [3 x i8]* @str_string, i32 0, i32 0),i8* %{self.text_generator.get_incremented()-1})"
+            )
+            self.text_generator.append_text(
+                f"store i8* %{self.text_generator.get_incremented()-1}, i8** {id_}"
+            )
+
         else:
             raise ValueError(f"Type {type_} scanning is not supported")
         self.text_generator.increment()
@@ -57,10 +74,24 @@ class LLVMGenerator:
             self.text_generator.append_text(
                 f"%{self.text_generator.get_incremented()} = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @str_float_newline, i32 0, i32 0),double %{self.text_generator.get_incremented()-1})"
             )
+        # elif type_ == Type.STR:
+        #     self.text_generator.append_text(
+        #         f"%{self.text_generator.get_incremented()} = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @str_string_newline, i32 0, i32 0),i8* {id_})"
+        #     )
+
         elif type_ == Type.STR:
+            # self.main_text += f"%{self.tmp} = load i8*, i8** {id_}\n"
+            # self.tmp += 1
+            # self.main_text += f"%{self.tmp} = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @str_string_newline, i32 0, i32 0),i8* %{self.tmp-1})\n"
+
             self.text_generator.append_text(
-                f"%{self.text_generator.get_incremented()} = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @str_string_newline, i32 0, i32 0),i8* {id_})"
+                f"%{self.text_generator.get_incremented()} = load i8*, i8** {id_}"
             )
+            self.text_generator.increment()
+            self.text_generator.append_text(
+                f"%{self.text_generator.get_incremented()}  = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @str_string_newline, i32 0, i32 0),i8* %{self.text_generator.get_incremented()-1})"
+            )
+
         else:
             raise ValueError(f"Type {type_} printing is not supported")
         self.text_generator.increment()
@@ -69,9 +100,8 @@ class LLVMGenerator:
         self, id_new: str, type_: Type, id_old: str | None = None, str_length: int = 0
     ) -> str:
         context_sign = self.text_generator.get_current_context().get_context_sign()
-
         if type_ == Type.STR:
-            return f"{context_sign}{self.text_generator.get_incremented()-1}"
+            return id_new
         if id_old is None:
             # if id_old is not passed, create new id
             self.text_generator.append_text(
@@ -117,6 +147,15 @@ class LLVMGenerator:
                 f"%{self.text_generator.get_incremented()} = getelementptr inbounds [{str_length+1} x i8], [{str_length+1} x i8]* {global_string_id}, i32 0, i32 0"
             )
             self.text_generator.increment()
+            # self.main_text += f"store i8* %{self.tmp-1}, i8** %{self.tmp-2}\n"
+            # return f"%{self.tmp-2}"
+            self.text_generator.append_text(
+                f"store i8* %{self.text_generator.get_incremented()-1}, i8** %{self.text_generator.get_incremented()-2}"
+            )
+            anon_id = f"%{self.text_generator.get_incremented()-2}"
+            print(f"{anon_id=} {type_=}\n")
+            anon_id = self.load(anon_id, type_, str_length=str_length)
+            return anon_id, type_
         else:
             self.text_generator.append_text(
                 f"store {type_} {value}, {type_}* %{self.text_generator.get_incremented()-1}"
@@ -279,11 +318,29 @@ class LLVMGenerator:
         raise NotImplementedError()
 
     def assign(self, id_: str, value: tuple[str, Type]):
+        # elif value_[1] == Type.STR:
+        #     # load i8*, i8** %1
+        #     self.main_text += f"%{self.tmp} = load i8*, i8** {value_[0]}\n"
+        #     self.tmp += 1
+        #     self.main_text += f"store i8* %{self.tmp-1}, i8** {id_}\n"
         id_value, type_ = value
+        if type_ == Type.STR:
+            self.text_generator.append_text(
+                f"%{self.text_generator.get_incremented()} = load i8*, i8** {id_value}"
+            )
+            self.text_generator.increment()
+            self.text_generator.append_text(
+                f"store i8* %{self.text_generator.get_incremented()-1}, i8** {id_}"
+            )
+            return
         self.__store(id_, id_value, type_)
 
     def declare_variable(
-        self, id_: str, type_: Type, var_type: VarType | None = None
+        self,
+        id_: str,
+        type_: Type,
+        var_type: VarType | None = None,
+        context_sign_global: bool = False,
     ) -> str:
         var_type = (
             self.text_generator.get_current_context() if var_type is None else var_type
@@ -294,7 +351,7 @@ class LLVMGenerator:
             if var_type == VarType.GLOBAL_VAR
             else ("alloca", "")
         )
-        context_sign = var_type.get_context_sign()
+        context_sign = "@" if context_sign_global else var_type.get_context_sign()
         self.text_generator.append_text(
             f"{context_sign}{id_} = {alloc_type} {type_} {zero_str}"
         )
