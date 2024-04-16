@@ -1,7 +1,8 @@
 from g4.ExprListener import ExprListener
 from g4.ExprParser import ExprParser
-from LLVMGenerator import LLVMGenerator, Type
-from Memory import Memory, VarType
+from .generator import LLVMGenerator, Type
+from .memory import Memory
+from .enums import VarType
 
 
 class ExprListenerImpl(ExprListener):
@@ -17,10 +18,6 @@ class ExprListenerImpl(ExprListener):
         TYPE = Type.map_(ctx.TYPE().getText()) if ctx.TYPE() is not None else None
         locked_type = TYPE is not None
         val_name, val_type = self.memory.stack.pop()
-
-        global_char, id_, variable = self.memory.set_variable(
-            self.generator, ID, val_type, locked_type
-        )
         global_char, id_, variable = self.memory.set_variable(
             self.generator, ID, val_type, locked_type
         )
@@ -40,7 +37,7 @@ class ExprListenerImpl(ExprListener):
         TYPE = ctx.TYPE().getText()
         type_ = Type.map_(TYPE)
 
-        self.memory.add(ID, TYPE, VarType.ARRAY_VAR, False, data=(type_, SIZE))
+        self.memory.add(ID, TYPE, False, data=(type_, SIZE), var_type=VarType.ARRAY_VAR)
         self.generator.declare_arr(ID, type_, SIZE)
 
     def exitArrayAssign(self, ctx: ExprParser.ArrayAssignContext):
@@ -77,12 +74,12 @@ class ExprListenerImpl(ExprListener):
             self.generator.printf(val_name, Type.STR)
         elif hasattr(ctx, "ID"):
             ID = ctx.ID().getText()  # type: ignore
-            global_char, id_, variable = self.memory.get_variable(ID)
+            _global_char, _id_, variable = self.memory.get_variable(ID)
             type_ = variable.get("type_", None)
             if type_ not in [Type.INT, Type.DOUBLE, Type.FLOAT, Type.STR]:
                 raise Exception(f"Unknown variable print type: {type_}")
 
-            val_name, val_type = self.memory.stack.pop()
+            val_name, _val_type = self.memory.stack.pop()
             self.generator.printf(val_name, type_)
 
         else:
@@ -95,8 +92,8 @@ class ExprListenerImpl(ExprListener):
         self.generator.scanf(global_char + id_, type_)
 
     def exitAddSub(self, ctx: ExprParser.AddSubContext):
-        r: tuple[str, Type] = self.memory.stack.pop()
-        l: tuple[str, Type] = self.memory.stack.pop()
+        r = self.memory.stack.pop()
+        l = self.memory.stack.pop()
         l_id, l_type = l
         r_id, r_type = r
         if l_type != r_type:
@@ -110,47 +107,34 @@ class ExprListenerImpl(ExprListener):
 
     def exitInt(self, ctx: ExprParser.IntContext):
         INT = ctx.INT().getText()
-        anon_id = self.generator.assign_anonymous(int(INT), Type.INT)
-        anon_id = self.generator.load(anon_id, Type.INT)
-        self.memory.stack.append((anon_id, Type.INT))
+        anon_id, type_ = self.generator.assign_anonymous(INT, Type.INT)
+        self.memory.stack.append((anon_id, type_))
 
     def exitDouble(self, ctx: ExprParser.DoubleContext):
         DOUBLE = ctx.DOUBLE().getText()
-        anon_id = self.generator.assign_anonymous(float(DOUBLE), Type.DOUBLE)
-        anon_id = self.generator.load(anon_id, Type.DOUBLE)
-        self.memory.stack.append((anon_id, Type.DOUBLE))
+        anon_id, type_ = self.generator.assign_anonymous(DOUBLE, Type.DOUBLE)
+        self.memory.stack.append((anon_id, type_))
 
     def exitFloat(self, ctx: ExprParser.FloatContext):
         FLOAT = ctx.FLOAT().getText()
         FLOAT = FLOAT[:-1]
-        anon_id = self.generator.assign_anonymous(float(FLOAT), Type.FLOAT)
-        anon_id = self.generator.load(anon_id, Type.FLOAT)
-        self.memory.stack.append((anon_id, Type.FLOAT))
+        anon_id, type_ = self.generator.assign_anonymous(FLOAT, Type.FLOAT)
+        self.memory.stack.append((anon_id, type_))
 
     def exitStr(self, ctx: ExprParser.StrContext):
         STR = ctx.STR().getText()
         STR = STR[1:-1]
-        anon_id = self.generator.assign_anonymous(STR, Type.STR)
-        anon_id = self.generator.load(anon_id, Type.STR, len(STR))
-        self.memory.stack.append((anon_id, Type.STR))
+        anon_id, type_ = self.generator.assign_anonymous(STR, Type.STR)
+        self.memory.stack.append((anon_id, type_))
 
     def exitId(self, ctx: ExprParser.IdContext):
         ID = ctx.ID().getText()
         (global_char, id_, variable) = self.memory.get_variable(ID)
-        type_ = variable["type_"]
-        anon_id = ""
-        if type_ == Type.INT:
-            anon_id = self.generator.load(global_char + id_, Type.INT)
-        elif type_ == Type.DOUBLE:
-            anon_id = self.generator.load(global_char + id_, Type.DOUBLE)
-        elif type_ == Type.FLOAT:
-            anon_id = self.generator.load(global_char + id_, Type.FLOAT)
-        elif type_ == Type.STR:
-            anon_id = self.generator.load(
-                global_char + id_, Type.STR, 12  # variable["data"]["length"] TODO
-            )
-        else:
-            raise Exception(f"Unknown variable type: {type_}")
+        type_ = variable.get("type_", None)
+        if type_ is None:
+            raise ValueError("Variable does not have a type_ property")
+        anon_id = self.generator.load(f"{global_char}{id_}", type_, str_length=12)
+        # TODO: variable["data"]["length"]
         self.memory.stack.append((anon_id, type_))
 
     def exitArrayAccess(self, ctx: ExprParser.ArrayAccessContext):
@@ -169,8 +153,8 @@ class ExprListenerImpl(ExprListener):
         self.memory.stack.append((anon_id, type_))
 
     def exitMulDiv(self, ctx: ExprParser.MulDivContext):
-        r: tuple[str, Type] = self.memory.stack.pop()
-        l: tuple[str, Type] = self.memory.stack.pop()
+        r = self.memory.stack.pop()
+        l = self.memory.stack.pop()
         l_id, l_type = l
         r_id, r_type = r
         if l_type != r_type:
@@ -183,8 +167,8 @@ class ExprListenerImpl(ExprListener):
         self.memory.stack.append((anon_id, type_))
 
     def exitBitAndOrXor(self, ctx: ExprParser.BitAndOrXorContext):
-        r: tuple[str, Type] = self.memory.stack.pop()
-        l: tuple[str, Type] = self.memory.stack.pop()
+        r = self.memory.stack.pop()
+        l = self.memory.stack.pop()
         l_id, l_type = l
         r_id, r_type = r
         if l_type != r_type:
@@ -208,7 +192,7 @@ class ExprListenerImpl(ExprListener):
         self.memory.stack.append((anon_id, type_))
 
     def exitBitNot(self, ctx: ExprParser.BitNotContext):
-        r: tuple[str, Type] = self.memory.stack.pop()
+        r = self.memory.stack.pop()
         r_id, r_type = r
         if r_type != Type.INT:
             raise ValueError(f"Types: {r_type} must be INT")
@@ -218,7 +202,7 @@ class ExprListenerImpl(ExprListener):
         self.memory.stack.append((anon_id, type_))
 
     def exitLogicalNot(self, ctx: ExprParser.LogicalNotContext):
-        r: tuple[str, Type] = self.memory.stack.pop()
+        r = self.memory.stack.pop()
         r_id, r_type = r
         if r_type != Type.INT:
             raise ValueError(f"Types: {r_type} must be INT")
@@ -237,7 +221,9 @@ class ExprListenerImpl(ExprListener):
         TYPE = ctx.TYPE().getText()
         type_ = Type.map_(TYPE)
 
-        self.memory.add(ID, TYPE, VarType.ARRAY_VAR, False, data=(type_, rows, cols))
+        self.memory.add(
+            ID, TYPE, False, data=(type_, rows, cols), var_type=VarType.ARRAY_VAR
+        )
         self.generator.declare_arr2d(ID, type_, rows, cols)
 
     def exitArray2dAssign(self, ctx: ExprParser.Array2dAssignContext):
@@ -278,8 +264,7 @@ class ExprListenerImpl(ExprListener):
         self.memory.stack.append((anon_id, type_))
 
     def exitIcmpExpr(self, ctx: ExprParser.IcmpExprContext):
-        # r: tuple[str, Type] = self.memory.stack.pop()
-        r: tuple[str, Type] = self.memory.stack[-1]
+        r = self.memory.stack[-1]
         r_id, r_type = r
         self.generator.icmp(r_id, r_type)
 
@@ -289,11 +274,58 @@ class ExprListenerImpl(ExprListener):
     def exitIfBlock(self, ctx: ExprParser.IfBlockContext):
         self.generator.if_end()
 
+    def enterWhile(self, ctx: ExprParser.WhileContext):
+        self.generator.while_start()
+
     def enterWhileBlock(self, ctx: ExprParser.WhileBlockContext):
         self.generator.while_start_block()
 
     def exitWhileBlock(self, ctx: ExprParser.WhileBlockContext):
-        self.generator.while_end()
+        self.generator.while_end_block()
 
-    def enterWhile(self, ctx: ExprParser.WhileContext):
-        self.generator.while_start()
+    def enterFunction(self, ctx: ExprParser.FunctionContext):
+        id_ = ctx.functionParam().ID().getText()
+        type_ = Type.map_(ctx.TYPE().getText())
+        args = [
+            (
+                str(f.ID().getText()),
+                Type.map_(f.TYPE().getText()),
+                None if f.MUTABLE() is None else str(f.MUTABLE().getText()),
+            )
+            for f in ctx.functionArgs().functionArg()
+        ]
+        self.memory.add(id_, type_, True, data=(type_, args), var_type=VarType.FN_VAR)
+        self.generator.fn_start(id_, type_, args)
+
+    def exitFunction(self, ctx: ExprParser.FunctionContext):
+        type_ = Type.map_(ctx.TYPE().getText())
+        id_ = (
+            ctx.functionReturn().ID().getText()
+            if ctx.functionReturn().ID() is not None
+            else None
+        )
+        # TODO: validate return type match defined
+        self.generator.fn_end(id_, type_)
+
+    def exitFunctionCall(self, ctx: ExprParser.FunctionCallContext):
+        id_ = ctx.ID().getText()
+        value = self.memory.get(id_, VarType.FN_VAR)
+        if value is None:
+            raise ValueError(f"Function with ID: {id_} does not exist")
+        data = value.get("data", None)
+        if data is None:
+            raise ValueError("Function with ID does not have data")
+        type_returned, args_ = data
+        args: list[tuple[str, Type, str, str | None]] = [
+            (
+                str(id_or_val.getText()),
+                type_,
+                str(param_name),
+                mut,
+            )
+            for id_or_val, (param_name, type_, mut) in zip(
+                ctx.functionArgsCall().value(), args_
+            )
+        ]
+
+        self.generator.fn_call(id_, type_returned, args)
