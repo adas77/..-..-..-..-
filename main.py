@@ -1,6 +1,6 @@
 import sys
 from antlr4 import FileStream, CommonTokenStream, InputStream, ParseTreeWalker
-from ExprListenerImpl import ExprListenerImpl
+from src.listener import ExprListenerImpl
 from g4.ExprLexer import ExprLexer
 from g4.ExprParser import ExprParser
 

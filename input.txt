@@ -1,13 +1,32 @@
 
 
-# fn fname (param1 : int, param2 : int) :int
-#     xdd = param1 
-#     print(xdd)
-#     return xdd
+fn fname (param1 : int, param2 : int) :int
+    q11 = 4 
+    q12=3
+    print(q12) 
+    return q12
+nf
+
+# fn addd (xx : int, yy: int) :int #FIXME
+#     a = xx + yy
+#     return a
 # nf
-# 
-# qwerty = 56787
-# res = fname(1, qwerty)
+
+qwerty = 56787
+# res = fname(1, qwerty) #FIXME
+res = fname(1, 6)
+# ress = addd(1, 6)
+# print("ress")
+# print(ress)
+
+fn fname2 (param11 : int, param22 : int) :int
+    q21 = 4 
+    q22=3
+    print(q21)
+    return q22
+nf
+
+
 
 randomstring = "hello world"
 print(randomstring)

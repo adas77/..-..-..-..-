@@ -42,7 +42,9 @@ function:
 functionParam: ID;
 functionBlock: ( stat? NEWLINE)*;
 functionReturn: ( 'return' ID NEWLINE+)?;
-functionArgs: '(' (ID ':' TYPE (',' ID ':' TYPE)*)? ')';
+functionArgs: '(' (functionArg (',' functionArg)*)? ')';
+functionArg: ID ':' MUTABLE? TYPE;
+MUTABLE: 'mut';
 functionArgsCall: '(' (value (',' value)*)? ')';
 STARTFUNCTION: 'fn';
 ENDFUNCTION: 'nf';
