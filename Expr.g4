@@ -11,7 +11,8 @@ stat:
 	| 'read' '(' ID ')'											# read
 	| ID '=' '{' expr (',' expr)* '}'							# structAssign
 	| ID '.' structField '=' expr								# structFieldAssign
-	| COMMENT_SINGLELINE										# comment;
+	| COMMENT_SINGLELINE										# comment
+	| 'global' ID												# globalDeclaration;
 
 expr:
 	term								# singleTerm

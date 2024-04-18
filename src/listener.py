@@ -2,7 +2,7 @@ from g4.ExprListener import ExprListener
 from g4.ExprParser import ExprParser
 from .generator import LLVMGenerator, Type
 from .memory import Memory
-from .enums import VarType
+from .enums import Context
 
 
 class ExprListenerImpl(ExprListener):
@@ -37,7 +37,7 @@ class ExprListenerImpl(ExprListener):
         TYPE = ctx.TYPE().getText()
         type_ = Type.map_(TYPE)
 
-        self.memory.add(ID, TYPE, False, data=(type_, SIZE), var_type=VarType.ARRAY_VAR)
+        self.memory.add(ID, TYPE, False, data=(type_, SIZE))
         self.generator.declare_arr(ID, type_, SIZE)
 
     def exitArrayAssign(self, ctx: ExprParser.ArrayAssignContext):
@@ -221,9 +221,7 @@ class ExprListenerImpl(ExprListener):
         TYPE = ctx.TYPE().getText()
         type_ = Type.map_(TYPE)
 
-        self.memory.add(
-            ID, TYPE, False, data=(type_, rows, cols), var_type=VarType.ARRAY_VAR
-        )
+        self.memory.add(ID, TYPE, False, data=(type_, rows, cols))
         self.generator.declare_arr2d(ID, type_, rows, cols)
 
     def exitArray2dAssign(self, ctx: ExprParser.Array2dAssignContext):
@@ -294,7 +292,7 @@ class ExprListenerImpl(ExprListener):
             )
             for f in ctx.functionArgs().functionArg()
         ]
-        self.memory.add(id_, type_, True, data=(type_, args), var_type=VarType.FN_VAR)
+        self.memory.add(id_, type_, True, data=(type_, args))
         self.generator.fn_start(id_, type_, args)
 
     def exitFunction(self, ctx: ExprParser.FunctionContext):
@@ -309,7 +307,7 @@ class ExprListenerImpl(ExprListener):
 
     def exitFunctionCall(self, ctx: ExprParser.FunctionCallContext):
         id_ = ctx.ID().getText()
-        value = self.memory.get(id_, VarType.FN_VAR)
+        value = self.memory.get(id_, Context.HEADER)
         if value is None:
             raise ValueError(f"Function with ID: {id_} does not exist")
         data = value.get("data", None)
@@ -329,3 +327,8 @@ class ExprListenerImpl(ExprListener):
         ]
 
         self.generator.fn_call(id_, type_returned, args)
+
+    def exitGlobalDeclaration(self, ctx: ExprParser.GlobalDeclarationContext):
+        ID = ctx.ID().getText()
+        print(f"█\n█\n█\n█ global {ID}")
+        self.memory.copy_global_to_local(ID)

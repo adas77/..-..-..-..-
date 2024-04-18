@@ -75,12 +75,10 @@ class Type(Enum):
         return f"{res}{newline_str}"
 
 
-class VarType(Enum):
-    GLOBAL_VAR = ("global_var",)
-    LOCAL_VAR = ("local_var",)
-    FN_VAR = ("fn_var",)
-    STRUCT_VAR = ("struct_var",)
-    ARRAY_VAR = ("array_var",)
+class Context(Enum):
+    HEADER = (1,)
+    MAIN = (2,)
+    FUNCTION = (3,)
 
     def get_context_sign(self) -> str:
-        return "@" if self == VarType.GLOBAL_VAR else "%"
+        return "%" if self == Context.FUNCTION else "@"

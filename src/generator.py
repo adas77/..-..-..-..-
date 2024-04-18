@@ -1,7 +1,7 @@
 import struct
 
 from .text_generator import TextGenerator
-from .enums import Instruction, TmpCounter, Type, VarType
+from .enums import Instruction, TmpCounter, Type, Context
 
 
 class LLVMGenerator:
@@ -82,6 +82,7 @@ class LLVMGenerator:
         self, id_new: str, type_: Type, id_old: str | None = None, str_length: int = 0
     ) -> str:
         context_sign = self.text_generator.get_current_context().get_context_sign()
+
         if type_ == Type.STR:
             return id_new
         if id_old is None:
@@ -123,7 +124,7 @@ class LLVMGenerator:
                 f"string_{self.text_generator.get_incremented(TmpCounter.TMP_STR)}",
                 str(value),
             )
-            self.text_generator.increment(TmpCounter.TMP_STR)
+            self.text_generator.increment(override_str=True)
             str_length = len(str(value))
             self.text_generator.append_text(
                 f"%{self.text_generator.get_incremented()} = getelementptr inbounds [{str_length+1} x i8], [{str_length+1} x i8]* {global_string_id}, i32 0, i32 0"
@@ -313,21 +314,20 @@ class LLVMGenerator:
         self,
         id_: str,
         type_: Type,
-        var_type: VarType | None = None,
-        context_sign_global: bool = False,
     ) -> str:
-        var_type = (
-            self.text_generator.get_current_context() if var_type is None else var_type
-        )
+
+        context = self.text_generator.get_current_context()
         zero_str = type_.get_zero_str()
         alloc_type, zero_str = (
             ("global", type_.get_zero_str())
-            if var_type == VarType.GLOBAL_VAR
+            if context != Context.FUNCTION
             else ("alloca", "")
         )
-        context_sign = "@" if context_sign_global else var_type.get_context_sign()
+        context_sign = context.get_context_sign()  # FIXME
+
         self.text_generator.append_text(
-            f"{context_sign}{id_} = {alloc_type} {type_} {zero_str}"
+            f"{context_sign}{id_} = {alloc_type} {type_} {zero_str}",
+            context=Context.HEADER if context != Context.FUNCTION else Context.FUNCTION,
         )
         return f"{context_sign}{id_}"
 
@@ -377,7 +377,8 @@ class LLVMGenerator:
         return f"%{self.text_generator.get_incremented()-1}"
 
     def fn_start(self, id_: str, type_: Type, args: list[tuple[str, Type, str | None]]):
-        self.text_generator.set_current_context(VarType.FN_VAR)
+        self.text_generator.set_current_context(Context.FUNCTION)
+        self.text_generator.reset_function_counter()
         params_str = ", ".join([f"{type_} %{id_}" for id_, type_, mut in args])
         self.text_generator.append_text(f"define {type_} @{id_}({params_str}) {'{'}")
 
@@ -385,10 +386,10 @@ class LLVMGenerator:
         return_str = (
             "void"
             if id_ is None
-            else f"{type_} {self.load(f'{VarType.FN_VAR.get_context_sign()}{id_}', type_)}"
+            else f"{type_} {self.load(f'{Context.FUNCTION.get_context_sign()}{id_}', type_)}"
         )
         self.text_generator.append_text(f"ret {return_str}\n{'}'}")
-        self.text_generator.set_current_context(VarType.LOCAL_VAR)
+        self.text_generator.set_current_context(Context.MAIN)
 
     def fn_call(
         self,
@@ -412,10 +413,12 @@ class LLVMGenerator:
         self.text_generator.append_text(f"store {type_} {value}, {type_}* {id_}")
 
     def __declare_global_string(self, name: str, value: str) -> str:
+        old_context = self.text_generator.get_current_context()
+        self.text_generator.set_current_context(Context.HEADER)
         self.text_generator.append_text(
             f'@{name} = constant [{len(value)+1} x i8] c"{value}\\00"',
-            var_type=VarType.GLOBAL_VAR,
         )
+        self.text_generator.set_current_context(old_context)
         return f"@{name}"
 
     def __validate_2d_size(self, rows: int, cols: int, r: int, c: int):

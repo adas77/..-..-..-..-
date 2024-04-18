@@ -1,11 +1,23 @@
+print("q12")
+print("q12")
+print("q12")
+print("q12")
+print("q12")
+print("q12")
+print("q12")
 
-
+q11 =3
+print("q11")
+print(3)
 fn fname (param1 : int, param2 : int) :int
-    q11 = 4 
+    global q11
     q12=3
-    print(q12) 
-    return q12
+    print(q11)
+    return q11
 nf
+print("q12")
+print("q12")
+print("q12")
 
 # fn addd (xx : int, yy: int) :int #FIXME
 #     a = xx + yy
@@ -14,7 +26,7 @@ nf
 
 qwerty = 56787
 # res = fname(1, qwerty) #FIXME
-res = fname(1, 6)
+# res = fname(1, 6)
 # ress = addd(1, 6)
 # print("ress")
 # print(ress)
