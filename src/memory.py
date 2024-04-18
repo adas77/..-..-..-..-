@@ -13,6 +13,10 @@ class Memory:
         # self.__arrays: dict[str, dict] = {}
 
         self.stack: list[tuple[str, Type]] = []
+        self.var_counter = 1
+
+    def clean_local_variables(self):
+        self.__local_variables.clear()
 
     def get(self, id_: str, context: Context):
         var_type_dict = self.__get_var_type(context)
@@ -40,6 +44,14 @@ class Memory:
         variable = self.get(id_, context)
         sign = variable["sign"]
         return sign, id_, variable
+
+    def remove_variable(self, id_: str, context: Context):
+        variable = self.__get_var_type(context)
+        if variable is None:
+            raise Exception("Cannot remove variable from non-existent context")
+        del variable[id_]
+        # sign = variable["sign"]
+        # return sign, id_, variable
 
         # pass
         # local_variable = self.__local_variables.get(id_, None)
@@ -84,16 +96,13 @@ class Memory:
             raise ValueError(f"Variable with ID: {id_} already exist")
 
         var_type_dict[id_] = {
-            "llvm_id": f"{sign}{id_}",
+            "llvm_id": f"{sign}var{self.var_counter}",
             "sign": sign,
             "type_": type_,
             "locked_type": locked_type,
             "data": data,
         }
-        if id_ == "q12":
-            print("   █\n   █")
-            print(f"context: {context}")
-            print(f"added variable: {id_} with type: {type_} with sign: {sign}")
+        self.var_counter += 1
 
     def set_variable(
         self,
@@ -119,10 +128,7 @@ class Memory:
                         f"Types: {variable['type_']} must match {assign_type}"
                     )
         sign = variable["sign"]
-        print(f" █\n █ context: {context}")
-        print(f" █ setting variable: {id_} to {assign_type}")
-        # print(self.__global_variables)
-        # print(self.__local_variables)
+
         return sign, id_, variable
 
     def __get_var_type(self, context: Context) -> dict | None:

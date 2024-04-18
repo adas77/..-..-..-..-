@@ -12,7 +12,8 @@ stat:
 	| ID '=' '{' expr (',' expr)* '}'							# structAssign
 	| ID '.' structField '=' expr								# structFieldAssign
 	| COMMENT_SINGLELINE										# comment
-	| 'global' ID												# globalDeclaration;
+	| 'global' ID												# globalDeclaration
+	| 'del' ID													# deleteVariable;
 
 expr:
 	term								# singleTerm

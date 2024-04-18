@@ -312,6 +312,7 @@ class ExprListenerImpl(ExprListener):
         self.generator.while_end_block()
 
     def enterFunction(self, ctx: ExprParser.FunctionContext):
+        self.memory.clean_local_variables()
         id_ = ctx.functionParam().ID().getText()
         type_ = Type.map_(ctx.TYPE().getText())
         args = [
@@ -343,7 +344,7 @@ class ExprListenerImpl(ExprListener):
             sign, id_, variable = self.memory.get_variable(
                 id_, self.generator.text_generator.get_current_context()
             )
-            id_ = variable["llvm_id"]
+            id_ = variable["sign"] + id_
 
         self.generator.fn_end(id_, type_)
 
@@ -376,3 +377,11 @@ class ExprListenerImpl(ExprListener):
         ID = ctx.ID().getText()
         # print(f"█\n█\n█\n█ global {ID}")
         self.memory.copy_global_to_local(ID)
+
+    def exitDeleteVariable(
+        self, ctx: ExprParser.DeleteVariableContext
+    ):  # TODO WARN will not work!!!
+        ID = ctx.ID().getText()
+        self.memory.remove_variable(
+            ID, self.generator.text_generator.get_current_context()
+        )
