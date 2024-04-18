@@ -81,8 +81,6 @@ class LLVMGenerator:
     def load(
         self, id_new: str, type_: Type, id_old: str | None = None, str_length: int = 0
     ) -> str:
-        context_sign = self.text_generator.get_current_context().get_context_sign()
-
         if type_ == Type.STR:
             return id_new
         if id_old is None:
@@ -92,12 +90,12 @@ class LLVMGenerator:
             )
 
             self.text_generator.increment()
-            return f"{context_sign}{self.text_generator.get_incremented()-1}"
+            return f"%{self.text_generator.get_incremented()-1}"
         else:
             self.text_generator.append_text(
                 f"%{id_old} = load {type_}, {type_}* {id_new}"
             )
-            return f"{context_sign}{id_old}"
+            return f"%{id_old}"
 
     def assign_anonymous(self, value: str, type_: Type) -> tuple[str, Type]:
         self.text_generator.append_text(
@@ -383,13 +381,11 @@ class LLVMGenerator:
         self.text_generator.append_text(f"define {type_} @{id_}({params_str}) {'{'}")
 
     def fn_end(self, id_: str | None, type_: Type):
-        return_str = (
-            "void"
-            if id_ is None
-            else f"{type_} {self.load(f'{Context.FUNCTION.get_context_sign()}{id_}', type_)}"
-        )
+        returned_id = self.load(f"{id_}", type_)
+        return_str = "void" if id_ is None else f"{type_} {returned_id}"
         self.text_generator.append_text(f"ret {return_str}\n{'}'}")
-        self.text_generator.set_current_context(Context.MAIN)
+
+        self.text_generator.set_current_context(Context.MAIN)  # FIXME
 
     def fn_call(
         self,

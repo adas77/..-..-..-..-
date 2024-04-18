@@ -115,6 +115,7 @@ class TextGenerator:
 
     def set_current_context(self, context: Context):
         self.__current_context = context
+        print(f"Setting context to {context}")
 
     # '''
 
