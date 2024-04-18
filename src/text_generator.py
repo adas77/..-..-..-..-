@@ -5,7 +5,7 @@ from .enums import TmpCounter, Context
 class TextGenerator:
     START_TMP = 1
     START_TMP_STR = 1
-    START_TMP_FN = 1
+    START_TMP_FN = 0
 
     def __init__(self):
         self.__main_text = ""
@@ -115,7 +115,7 @@ class TextGenerator:
 
     def set_current_context(self, context: Context):
         self.__current_context = context
-        print(f"Setting context to {context}")
+        # print(f"Setting context to {context}")
 
     # '''
 

@@ -1,2 +1,7 @@
-a = 343
-print(a)
+fn foobar(a : int, b : float) : int
+    a = a * a
+    return a
+nf
+a=5
+f = foobar(8,4.0f)
+print(f)

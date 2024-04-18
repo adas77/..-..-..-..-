@@ -131,3 +131,8 @@ print(d)
 string s = "xd"
 read(s)
 print(s)
+
+# dynamic functions
+#a = 343
+#a = "asd"
+#print(a)

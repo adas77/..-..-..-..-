@@ -31,9 +31,18 @@ class ExprListenerImpl(ExprListener):
                     f"LockeType Types: {val_type} must match {variable['type_']}"
                 )
             else:
-                raise NotImplementedError("variable type change not implemented")
+                self.memory.remove_variable(
+                    ID, self.generator.text_generator.get_current_context()
+                )
+                global_char, id_, variable = self.memory.set_variable(
+                    self.generator,
+                    ID,
+                    self.generator.text_generator.get_current_context(),
+                    val_type,
+                    locked_type,
+                )
 
-        self.generator.assign(global_char + id_, (val_name, val_type))
+        self.generator.assign(variable["llvm_id"], (val_name, val_type))
 
     def exitArrayDeclaration(self, ctx: ExprParser.ArrayDeclarationContext):
         ID = ctx.ID().getText()
@@ -105,7 +114,7 @@ class ExprListenerImpl(ExprListener):
             ID, self.generator.text_generator.get_current_context()
         )
         type_ = variable["type_"]
-        self.generator.scanf(global_char + id_, type_)
+        self.generator.scanf(variable["llvm_id"], type_)
 
     def exitAddSub(self, ctx: ExprParser.AddSubContext):
         r = self.memory.stack.pop()
@@ -151,7 +160,8 @@ class ExprListenerImpl(ExprListener):
         type_ = variable.get("type_", None)
         if type_ is None:
             raise ValueError("Variable does not have a type_ property")
-        anon_id = self.generator.load(f"{global_char}{id_}", type_, str_length=12)
+        llvm_id = variable["llvm_id"]
+        anon_id = self.generator.load(f"{llvm_id}", type_, str_length=12)
         # TODO: variable["data"]["length"]
         self.memory.stack.append((anon_id, type_))
 
@@ -313,8 +323,8 @@ class ExprListenerImpl(ExprListener):
 
     def enterFunction(self, ctx: ExprParser.FunctionContext):
         self.memory.clean_local_variables()
-        id_ = ctx.functionParam().ID().getText()
-        type_ = Type.map_(ctx.TYPE().getText())
+        function_id_ = ctx.functionParam().ID().getText()
+        function_type_ = Type.map_(ctx.TYPE().getText())
         args = [
             (
                 str(f.ID().getText()),
@@ -324,13 +334,32 @@ class ExprListenerImpl(ExprListener):
             for f in ctx.functionArgs().functionArg()
         ]
         self.memory.add(
-            id_,
-            type_,
+            function_id_,
+            function_type_,
             True,
             self.generator.text_generator.get_current_context(),
-            data=(type_, args),
+            data=(function_type_, args),
         )
-        self.generator.fn_start(id_, type_, args)
+
+        self.generator.text_generator.set_current_context(Context.FUNCTION)
+        self.generator.text_generator.reset_function_counter()
+
+        context = self.generator.text_generator.get_current_context()
+
+        for i, arg in enumerate(args):
+            id_, type_, mut_ = arg
+
+            _, _, variable = self.memory.set_variable(
+                generator=self.generator,
+                id_=id_,
+                context=context,
+                assign_type=type_,
+                locked_type=True,
+                function_args=True,
+            )
+            args[i] = (variable["llvm_id"], type_, mut_)
+
+        self.generator.fn_start(function_id_, function_type_, args)
 
     def exitFunction(self, ctx: ExprParser.FunctionContext):
         type_ = Type.map_(ctx.TYPE().getText())
@@ -344,8 +373,7 @@ class ExprListenerImpl(ExprListener):
             sign, id_, variable = self.memory.get_variable(
                 id_, self.generator.text_generator.get_current_context()
             )
-            id_ = variable["sign"] + id_
-
+            id_ = variable["llvm_id"]
         self.generator.fn_end(id_, type_)
 
     def exitFunctionCall(self, ctx: ExprParser.FunctionCallContext):
@@ -357,17 +385,23 @@ class ExprListenerImpl(ExprListener):
         if data is None:
             raise ValueError("Function with ID does not have data")
         type_returned, args_ = data
-        args: list[tuple[str, Type, str, str | None]] = [
+        args: list[tuple[tuple[str, Type], str, str | None]] = [
             (
-                str(id_or_val.getText()),
-                type_,
+                self.memory.stack.pop(),
                 str(param_name),
                 mut,
             )
             for id_or_val, (param_name, type_, mut) in zip(
                 ctx.functionArgsCall().value(), args_
             )
-        ]
+        ]  # TODO ARGS  variable["llvm_id"]
+
+        # for id_or_val, type_, param_name, mut in args_:
+        #     (val_name, val_type) = self.memory.stack.pop()
+
+        # (i32 %12, double %13)
+
+        args = args[::-1]
         self.generator.fn_call(id_, type_returned, args)
         self.memory.stack.append(
             (f"%{self.generator.text_generator.get_incremented()-1}", type_returned)
@@ -375,7 +409,6 @@ class ExprListenerImpl(ExprListener):
 
     def exitGlobalDeclaration(self, ctx: ExprParser.GlobalDeclarationContext):
         ID = ctx.ID().getText()
-        # print(f"█\n█\n█\n█ global {ID}")
         self.memory.copy_global_to_local(ID)
 
     def exitDeleteVariable(

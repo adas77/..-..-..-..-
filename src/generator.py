@@ -321,13 +321,12 @@ class LLVMGenerator:
             if context != Context.FUNCTION
             else ("alloca", "")
         )
-        context_sign = context.get_context_sign()  # FIXME
 
         self.text_generator.append_text(
-            f"{context_sign}{id_} = {alloc_type} {type_} {zero_str}",
+            f"{id_} = {alloc_type} {type_} {zero_str}",
             context=Context.HEADER if context != Context.FUNCTION else Context.FUNCTION,
         )
-        return f"{context_sign}{id_}"
+        return f"{id_}"
 
     def if_start(self):
         l, _, r = Instruction.IF.value
@@ -375,10 +374,30 @@ class LLVMGenerator:
         return f"%{self.text_generator.get_incremented()-1}"
 
     def fn_start(self, id_: str, type_: Type, args: list[tuple[str, Type, str | None]]):
-        self.text_generator.set_current_context(Context.FUNCTION)
-        self.text_generator.reset_function_counter()
-        params_str = ", ".join([f"{type_} %{id_}" for id_, type_, mut in args])
-        self.text_generator.append_text(f"define {type_} @{id_}({params_str}) {'{'}")
+        params_str = ""
+        start_counter_value = self.text_generator.get_incremented()
+        for arg_id_, arg_type_, arg_mut in args:
+            params_str += f"{arg_type_} %{self.text_generator.get_incremented()}, "
+            self.text_generator.increment()
+        params_str = params_str[:-2]
+
+        # self.text_generator.get_incremented()
+        # params_str = ", ".join([f"{type_} {}" for id_, type_, mut in args])
+        # self.text_generator.append_text(f"define {type_} @{id_}({params_str}) {'{'}")
+        self.text_generator.append_text(f"define {type_} @{id_}({params_str}) {{")
+
+        self.text_generator.increment()
+        for arg_id_, arg_type_, arg_mut in args:
+            self.text_generator.append_text(
+                f"{arg_id_} = alloca {arg_type_}", context=Context.FUNCTION
+            )  # TODO add alloca for args dor each type
+            self.text_generator.append_text(
+                f"store {arg_type_} %{start_counter_value}, {arg_type_}* {arg_id_}",
+                context=Context.FUNCTION,
+            )
+            start_counter_value += 1
+
+        # add alloca for args
 
     def fn_end(self, id_: str | None, type_: Type):
         returned_id = self.load(f"{id_}", type_)
@@ -391,11 +410,12 @@ class LLVMGenerator:
         self,
         id_: str,
         type_returned: Type,
-        args: list[tuple[str, Type, str, str | None]],
+        args: list[tuple[tuple[str, Type], str, str | None]],
     ):
         params_str = ", ".join(
-            [f"{type_} {id_or_val}" for id_or_val, type_, param_name, mut in args]
+            [f"{type_} {id_or_val}" for (id_or_val, type_), param_name, mut in args]
         )
+
         self.text_generator.append_text(
             f"%{self.text_generator.get_incremented()} = call {type_returned} @{id_}({params_str})"
         )

@@ -111,6 +111,7 @@ class Memory:
         context: Context,
         assign_type: Type,
         locked_type: bool = False,
+        function_args: bool = False,
     ):
         # context = self.t.get_current_context()
         dict_variables = self.__get_var_type(context)
@@ -119,7 +120,10 @@ class Memory:
         variable = dict_variables.get(id_, None)
         if variable is None:
             self.add(id_, assign_type, locked_type, context)
-            generator.declare_variable(id_, assign_type)
+            _, _, variable = self.get_variable(id_, context)
+            llvm_id = variable["llvm_id"]
+            if not function_args:
+                generator.declare_variable(llvm_id, assign_type)
             variable = self.get(id_, context)
         else:
             if variable["locked_type"]:
