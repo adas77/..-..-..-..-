@@ -20,6 +20,7 @@ class Type(Enum):
     DOUBLE = ("double",)
     STR = ("i8*",)
     FLOAT = ("float",)
+    VOID = ("void",)
 
     def __str__(self):
         return f"{self.value[0]}"
@@ -31,6 +32,7 @@ class Type(Enum):
             "double": Type.DOUBLE,
             "string": Type.STR,
             "float": Type.FLOAT,
+            "void": Type.VOID,
         }
         res = types_mappings.get(type_, None)
         if res is None:

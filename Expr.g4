@@ -43,7 +43,7 @@ function:
 	STARTFUNCTION functionParam functionArgs ':' TYPE functionBlock functionReturn ENDFUNCTION;
 functionParam: ID;
 functionBlock: ( stat? NEWLINE)*;
-functionReturn: ( 'return' ID NEWLINE+)?;
+functionReturn: ( 'return' ID? NEWLINE+)?;
 functionArgs: '(' (functionArg (',' functionArg)*)? ')';
 functionArg: ID ':' MUTABLE? TYPE;
 MUTABLE: 'mut';

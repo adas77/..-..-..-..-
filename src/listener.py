@@ -363,14 +363,23 @@ class ExprListenerImpl(ExprListener):
 
     def exitFunction(self, ctx: ExprParser.FunctionContext):
         type_ = Type.map_(ctx.TYPE().getText())
+        # id_ = (
+        #     ctx.functionReturn().ID().getText()
+        #     if ctx.functionReturn().ID().getText() != "<missing ID>"
+        #     else None
+        # )
+
         id_ = (
-            ctx.functionReturn().ID().getText()
-            if ctx.functionReturn().ID() is not None
-            else None
+            None
+            if ctx.functionReturn().ID() is None
+            or ctx.functionReturn().ID().getText() == "<missing ID>"
+            else ctx.functionReturn().ID().getText()
         )
+
         # TODO: validate return type match defined
+
         if id_ is not None:
-            sign, id_, variable = self.memory.get_variable(
+            _sign, id_, variable = self.memory.get_variable(
                 id_, self.generator.text_generator.get_current_context()
             )
             id_ = variable["llvm_id"]
@@ -391,15 +400,10 @@ class ExprListenerImpl(ExprListener):
                 str(param_name),
                 mut,
             )
-            for id_or_val, (param_name, type_, mut) in zip(
+            for _id_or_val, (param_name, _type_, mut) in zip(
                 ctx.functionArgsCall().value(), args_
             )
         ]  # TODO ARGS  variable["llvm_id"]
-
-        # for id_or_val, type_, param_name, mut in args_:
-        #     (val_name, val_type) = self.memory.stack.pop()
-
-        # (i32 %12, double %13)
 
         args = args[::-1]
         self.generator.fn_call(id_, type_returned, args)
@@ -418,3 +422,17 @@ class ExprListenerImpl(ExprListener):
         self.memory.remove_variable(
             ID, self.generator.text_generator.get_current_context()
         )
+
+    # def enterStruct(self, ctx: ExprParser.StructContext):
+
+    #     pass
+
+    def exitStruct(self, ctx: ExprParser.StructContext):
+        # struct: STARTSTRUCT structId structBlock ENDSTRUCT;
+        # structId: ID;
+        # structBlock: (TYPE ID NEWLINE)*;
+        # STARTSTRUCT: 'struct';
+        # ENDSTRUCT: 'tcurts';
+        print(ctx)
+        print(dir(ctx.structId()))
+        # id_ = ctx.structId.ID().getText()

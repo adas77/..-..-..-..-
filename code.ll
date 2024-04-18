@@ -6,9 +6,28 @@ store float %1, float* %var3
 %3 = load i32, i32* %var2
 %4 = load i32, i32* %var2
 %5 = mul i32 %3, %4
-store i32 %5, i32* %var2
-%6 = load i32, i32* %var2
-ret i32 %6
+%6 = alloca i32
+store i32 1, i32* %6, align 4
+%7 = load i32, i32* %6
+%8 = alloca i32
+store i32 6, i32* %8, align 4
+%9 = load i32, i32* %8
+%10 = add i32 %7, %9
+%11 = add i32 %5, %10
+store i32 %11, i32* %var2
+%12 = load i32, i32* %var2
+ret i32 %12
+}
+define void @foobar4(i32 %0, float %1) {
+%var5 = alloca i32
+store i32 %0, i32* %var5
+%var6 = alloca float
+store float %1, float* %var6
+%3 = load i32, i32* %var5
+%4 = load i32, i32* %var5
+%5 = mul i32 %3, %4
+store i32 %5, i32* %var5
+ret void
 }
 
 declare i32 @printf(i8*, ...)
@@ -26,23 +45,21 @@ declare i32 @__isoc99_scanf(i8*, ...)
 @str_double = constant [4 x i8] c"%lf\00"
 @str_string = constant [3 x i8] c"%s\00"
 @str_float = constant [3 x i8] c"%f\00"
-@var4 = global i32 0
-@var5 = global i32 0
+@var7 = global i32 0
+@var8 = global i32 0
 
 define i32 @main() nounwind {
 %1 = alloca i32
 store i32 5, i32* %1, align 4
 %2 = load i32, i32* %1
-store i32 %2, i32* @var4
-%3 = alloca i32
-store i32 8, i32* %3, align 4
-%4 = load i32, i32* %3
-%5 = alloca float
-store float 0x4010000000000000, float* %5, align 4
-%6 = load float, float* %5
-%7 = call i32 @foobar(i32 %4, float %6)
-store i32 %7, i32* @var5
-%8 = load i32, i32* @var5
-%9 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @str_int_newline, i32 0, i32 0),i32 %8)
+store i32 %2, i32* @var7
+%3 = load i32, i32* @var7
+%4 = alloca float
+store float 0x4010000000000000, float* %4, align 4
+%5 = load float, float* %4
+%6 = call i32 @foobar(i32 %3, float %5)
+store i32 %6, i32* @var8
+%7 = load i32, i32* @var8
+%8 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @str_int_newline, i32 0, i32 0),i32 %7)
 
 ret i32 0 }

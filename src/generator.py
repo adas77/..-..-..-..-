@@ -400,7 +400,10 @@ class LLVMGenerator:
         # add alloca for args
 
     def fn_end(self, id_: str | None, type_: Type):
-        returned_id = self.load(f"{id_}", type_)
+        returned_id = ""
+        if id_ is not None:
+            returned_id = self.load(f"{id_}", type_)
+
         return_str = "void" if id_ is None else f"{type_} {returned_id}"
         self.text_generator.append_text(f"ret {return_str}\n{'}'}")
 

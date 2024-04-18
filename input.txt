@@ -1,7 +1,17 @@
 fn foobar(a : int, b : float) : int
-    a = a * a
+    a = a * a+1+6
     return a
 nf
+
+
+fn foobar4(aa : int, bb : float) : void
+    aa = aa * aa
+    
+    return
+
+nf
+
 a=5
-f = foobar(8,4.0f)
+f = foobar(a,4.0f)
 print(f)
+
