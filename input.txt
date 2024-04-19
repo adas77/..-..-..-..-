@@ -19,10 +19,14 @@ print(ress3)
 #
 # FUNCTION
 #
-
+globalna = 4
 fn foobar(a : int, b : int, arg : int) : int
+    global globalna
+    globalna = 3721
+    print("globalna")
+    print(globalna)
     arg = 67
-    # print("arg") 
+    print("arg") 
     print(arg)
     a = a * a + b
     return a

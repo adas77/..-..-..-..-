@@ -1,3 +1,4 @@
+import random
 import struct
 
 from .text_generator import TextGenerator
@@ -119,7 +120,8 @@ class LLVMGenerator:
             )
         elif type_ == Type.STR:
             global_string_id = self.__declare_global_string(
-                f"string_{self.text_generator.get_incremented(TmpCounter.TMP_STR)}",
+                # f"string_{self.text_generator.get_incremented(TmpCounter.TMP_STR)}",
+                f"string_{random.randint(0, 100000)}",
                 str(value),
             )
             self.text_generator.increment(override_str=True)
