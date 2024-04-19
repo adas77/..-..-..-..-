@@ -1,7 +1,7 @@
 import struct
 
 from .text_generator import TextGenerator
-from .enums import Instruction, TmpCounter, Type, VarType
+from .enums import Instruction, TmpCounter, Type, Context
 
 
 class LLVMGenerator:
@@ -81,7 +81,6 @@ class LLVMGenerator:
     def load(
         self, id_new: str, type_: Type, id_old: str | None = None, str_length: int = 0
     ) -> str:
-        context_sign = self.text_generator.get_current_context().get_context_sign()
         if type_ == Type.STR:
             return id_new
         if id_old is None:
@@ -91,12 +90,12 @@ class LLVMGenerator:
             )
 
             self.text_generator.increment()
-            return f"{context_sign}{self.text_generator.get_incremented()-1}"
+            return f"%{self.text_generator.get_incremented()-1}"
         else:
             self.text_generator.append_text(
                 f"%{id_old} = load {type_}, {type_}* {id_new}"
             )
-            return f"{context_sign}{id_old}"
+            return f"%{id_old}"
 
     def assign_anonymous(self, value: str, type_: Type) -> tuple[str, Type]:
         self.text_generator.append_text(
@@ -123,7 +122,7 @@ class LLVMGenerator:
                 f"string_{self.text_generator.get_incremented(TmpCounter.TMP_STR)}",
                 str(value),
             )
-            self.text_generator.increment(TmpCounter.TMP_STR)
+            self.text_generator.increment(override_str=True)
             str_length = len(str(value))
             self.text_generator.append_text(
                 f"%{self.text_generator.get_incremented()} = getelementptr inbounds [{str_length+1} x i8], [{str_length+1} x i8]* {global_string_id}, i32 0, i32 0"
@@ -313,23 +312,21 @@ class LLVMGenerator:
         self,
         id_: str,
         type_: Type,
-        var_type: VarType | None = None,
-        context_sign_global: bool = False,
     ) -> str:
-        var_type = (
-            self.text_generator.get_current_context() if var_type is None else var_type
-        )
+
+        context = self.text_generator.get_current_context()
         zero_str = type_.get_zero_str()
         alloc_type, zero_str = (
             ("global", type_.get_zero_str())
-            if var_type == VarType.GLOBAL_VAR
+            if context != Context.FUNCTION
             else ("alloca", "")
         )
-        context_sign = "@" if context_sign_global else var_type.get_context_sign()
+
         self.text_generator.append_text(
-            f"{context_sign}{id_} = {alloc_type} {type_} {zero_str}"
+            f"{id_} = {alloc_type} {type_} {zero_str}",
+            context=Context.HEADER if context != Context.FUNCTION else Context.FUNCTION,
         )
-        return f"{context_sign}{id_}"
+        return f"{id_}"
 
     def if_start(self):
         l, _, r = Instruction.IF.value
@@ -377,32 +374,109 @@ class LLVMGenerator:
         return f"%{self.text_generator.get_incremented()-1}"
 
     def fn_start(self, id_: str, type_: Type, args: list[tuple[str, Type, str | None]]):
-        self.text_generator.set_current_context(VarType.FN_VAR)
-        params_str = ", ".join([f"{type_} %{id_}" for id_, type_, mut in args])
-        self.text_generator.append_text(f"define {type_} @{id_}({params_str}) {'{'}")
+        params_str = ""
+        start_counter_value = self.text_generator.get_incremented()
+        for arg_id_, arg_type_, arg_mut in args:
+            params_str += f"{arg_type_} %{self.text_generator.get_incremented()}, "
+            self.text_generator.increment()
+        params_str = params_str[:-2]
+
+        # self.text_generator.get_incremented()
+        # params_str = ", ".join([f"{type_} {}" for id_, type_, mut in args])
+        # self.text_generator.append_text(f"define {type_} @{id_}({params_str}) {'{'}")
+        self.text_generator.append_text(f"define {type_} @{id_}({params_str}) {{")
+
+        self.text_generator.increment()
+        for arg_id_, arg_type_, arg_mut in args:
+            self.text_generator.append_text(
+                f"{arg_id_} = alloca {arg_type_}", context=Context.FUNCTION
+            )  # TODO add alloca for args dor each type
+            self.text_generator.append_text(
+                f"store {arg_type_} %{start_counter_value}, {arg_type_}* {arg_id_}",
+                context=Context.FUNCTION,
+            )
+            start_counter_value += 1
+
+        # add alloca for args
 
     def fn_end(self, id_: str | None, type_: Type):
-        return_str = (
-            "void"
-            if id_ is None
-            else f"{type_} {self.load(f'{VarType.FN_VAR.get_context_sign()}{id_}', type_)}"
-        )
+        returned_id = ""
+        if id_ is not None:
+            returned_id = self.load(f"{id_}", type_)
+
+        return_str = "void" if id_ is None else f"{type_} {returned_id}"
         self.text_generator.append_text(f"ret {return_str}\n{'}'}")
-        self.text_generator.set_current_context(VarType.LOCAL_VAR)
+
+        self.text_generator.set_current_context(Context.MAIN)  # FIXME
 
     def fn_call(
         self,
         id_: str,
         type_returned: Type,
-        args: list[tuple[str, Type, str, str | None]],
+        args: list[tuple[tuple[str, Type], str, str | None]],
     ):
         params_str = ", ".join(
-            [f"{type_} {id_or_val}" for id_or_val, type_, param_name, mut in args]
+            [f"{type_} {id_or_val}" for (id_or_val, type_), param_name, mut in args]
         )
+
         self.text_generator.append_text(
             f"%{self.text_generator.get_incremented()} = call {type_returned} @{id_}({params_str})"
         )
         self.text_generator.increment()
+
+    def struct_start(self, id_, block: list[tuple[str, Type]]):
+        block_text = ", ".join(
+            [f"{block_parameter_type}" for _, block_parameter_type in block]
+        )
+        self.text_generator.append_text(
+            f"%struct.{id_} = type {'{'} {block_text} {'}'}",
+            context=Context.HEADER,
+        )
+
+    def struct_assign(self, id_: str, struct_id: str, args_ids: list[tuple[str, Type]]):
+        # self.text_generator.get_incremented()-1
+        # id_ = alloca %struct.s
+        if id_[0] == "%":
+            self.text_generator.append_text(
+                f"{id_} = alloca %struct.{struct_id}", context=Context.FUNCTION
+            )
+        else:
+            self.text_generator.append_text(
+                f"{id_} = global %struct.{struct_id} zeroinitializer",
+                context=Context.HEADER,
+            )
+
+        for i, (arg_id, arg_type) in enumerate(args_ids):
+            self.text_generator.append_text(
+                f"%{self.text_generator.get_incremented()} = getelementptr %struct.{struct_id}, %struct.{struct_id}* {id_}, i32 0, i32 {i}"
+            )
+            self.text_generator.append_text(
+                f"store {arg_type} {arg_id}, {arg_type}* %{self.text_generator.get_incremented()}"
+            )
+            self.text_generator.increment()
+
+    def struct_field_assign(
+        self, id_: str, struct_id: str, field_idx: int, value: tuple[str, Type]
+    ):
+        value_id, type_ = value
+        self.text_generator.append_text(
+            f"%{self.text_generator.get_incremented()} = getelementptr %struct.{struct_id}, %struct.{struct_id}* {id_}, i32 0, i32 {field_idx}"
+        )
+        self.text_generator.append_text(
+            f"store {type_} {value_id}, {type_}* %{self.text_generator.get_incremented()}"
+        )
+        self.text_generator.increment()
+
+    def struct_load_field(self, id_: str, struct_id: str, field_idx: int, type_: Type):
+        self.text_generator.append_text(
+            f"%{self.text_generator.get_incremented()} = getelementptr %struct.{struct_id}, %struct.{struct_id}* {id_}, i32 0, i32 {field_idx}"
+        )
+        self.text_generator.increment()
+        self.text_generator.append_text(
+            f"%{self.text_generator.get_incremented()} = load {type_}, {type_}* %{self.text_generator.get_incremented()-1}"
+        )
+        self.text_generator.increment()
+        return f"%{self.text_generator.get_incremented()-1}"
 
     # --------------------------------------------------------------------------------
     # --------------------------- PRIVATE METHODS ------------------------------------
@@ -412,10 +486,12 @@ class LLVMGenerator:
         self.text_generator.append_text(f"store {type_} {value}, {type_}* {id_}")
 
     def __declare_global_string(self, name: str, value: str) -> str:
+        old_context = self.text_generator.get_current_context()
+        self.text_generator.set_current_context(Context.HEADER)
         self.text_generator.append_text(
             f'@{name} = constant [{len(value)+1} x i8] c"{value}\\00"',
-            var_type=VarType.GLOBAL_VAR,
         )
+        self.text_generator.set_current_context(old_context)
         return f"@{name}"
 
     def __validate_2d_size(self, rows: int, cols: int, r: int, c: int):

@@ -2,7 +2,7 @@ from g4.ExprListener import ExprListener
 from g4.ExprParser import ExprParser
 from .generator import LLVMGenerator, Type
 from .memory import Memory
-from .enums import VarType
+from .enums import Context
 
 
 class ExprListenerImpl(ExprListener):
@@ -19,7 +19,11 @@ class ExprListenerImpl(ExprListener):
         locked_type = TYPE is not None
         val_name, val_type = self.memory.stack.pop()
         global_char, id_, variable = self.memory.set_variable(
-            self.generator, ID, val_type, locked_type
+            self.generator,
+            ID,
+            self.generator.text_generator.get_current_context(),
+            val_type,
+            locked_type,
         )
         if val_type != variable["type_"]:
             if variable["locked_type"]:
@@ -27,9 +31,18 @@ class ExprListenerImpl(ExprListener):
                     f"LockeType Types: {val_type} must match {variable['type_']}"
                 )
             else:
-                raise NotImplementedError("variable type change not implemented")
+                self.memory.remove_variable(
+                    ID, self.generator.text_generator.get_current_context()
+                )
+                global_char, id_, variable = self.memory.set_variable(
+                    self.generator,
+                    ID,
+                    self.generator.text_generator.get_current_context(),
+                    val_type,
+                    locked_type,
+                )
 
-        self.generator.assign(global_char + id_, (val_name, val_type))
+        self.generator.assign(variable["llvm_id"], (val_name, val_type))
 
     def exitArrayDeclaration(self, ctx: ExprParser.ArrayDeclarationContext):
         ID = ctx.ID().getText()
@@ -37,12 +50,20 @@ class ExprListenerImpl(ExprListener):
         TYPE = ctx.TYPE().getText()
         type_ = Type.map_(TYPE)
 
-        self.memory.add(ID, TYPE, False, data=(type_, SIZE), var_type=VarType.ARRAY_VAR)
+        self.memory.add(
+            ID,
+            TYPE,
+            False,
+            self.generator.text_generator.get_current_context(),
+            data=(type_, SIZE),
+        )
         self.generator.declare_arr(ID, type_, SIZE)
 
     def exitArrayAssign(self, ctx: ExprParser.ArrayAssignContext):
         ID = ctx.ID().getText()
-        type_, size = self.memory.get_arr(ID)
+        type_, size = self.memory.get_arr(
+            ID, self.generator.text_generator.get_current_context()
+        )
         INDEX = ctx.arrayIndexExpr().expr()
         VAL = ctx.expr()
         index = None
@@ -74,7 +95,9 @@ class ExprListenerImpl(ExprListener):
             self.generator.printf(val_name, Type.STR)
         elif hasattr(ctx, "ID"):
             ID = ctx.ID().getText()  # type: ignore
-            _global_char, _id_, variable = self.memory.get_variable(ID)
+            _global_char, _id_, variable = self.memory.get_variable(
+                ID, self.generator.text_generator.get_current_context()
+            )
             type_ = variable.get("type_", None)
             if type_ not in [Type.INT, Type.DOUBLE, Type.FLOAT, Type.STR]:
                 raise Exception(f"Unknown variable print type: {type_}")
@@ -87,9 +110,11 @@ class ExprListenerImpl(ExprListener):
 
     def exitRead(self, ctx: ExprParser.ReadContext):
         ID = ctx.ID().getText()
-        global_char, id_, variable = self.memory.get_variable(ID)
+        global_char, id_, variable = self.memory.get_variable(
+            ID, self.generator.text_generator.get_current_context()
+        )
         type_ = variable["type_"]
-        self.generator.scanf(global_char + id_, type_)
+        self.generator.scanf(variable["llvm_id"], type_)
 
     def exitAddSub(self, ctx: ExprParser.AddSubContext):
         r = self.memory.stack.pop()
@@ -129,17 +154,22 @@ class ExprListenerImpl(ExprListener):
 
     def exitId(self, ctx: ExprParser.IdContext):
         ID = ctx.ID().getText()
-        (global_char, id_, variable) = self.memory.get_variable(ID)
+        (global_char, id_, variable) = self.memory.get_variable(
+            ID, self.generator.text_generator.get_current_context()
+        )
         type_ = variable.get("type_", None)
         if type_ is None:
             raise ValueError("Variable does not have a type_ property")
-        anon_id = self.generator.load(f"{global_char}{id_}", type_, str_length=12)
+        llvm_id = variable["llvm_id"]
+        anon_id = self.generator.load(f"{llvm_id}", type_, str_length=12)
         # TODO: variable["data"]["length"]
         self.memory.stack.append((anon_id, type_))
 
     def exitArrayAccess(self, ctx: ExprParser.ArrayAccessContext):
         ID = ctx.ID().getText()
-        arr_val = self.memory.get_arr(ID)
+        arr_val = self.memory.get_arr(
+            ID, self.generator.text_generator.get_current_context()
+        )
         type_, size = arr_val
         EXPR = ctx.expr()
 
@@ -222,13 +252,19 @@ class ExprListenerImpl(ExprListener):
         type_ = Type.map_(TYPE)
 
         self.memory.add(
-            ID, TYPE, False, data=(type_, rows, cols), var_type=VarType.ARRAY_VAR
+            ID,
+            TYPE,
+            False,
+            self.generator.text_generator.get_current_context(),
+            data=(type_, rows, cols),
         )
         self.generator.declare_arr2d(ID, type_, rows, cols)
 
     def exitArray2dAssign(self, ctx: ExprParser.Array2dAssignContext):
         ID = ctx.ID().getText()
-        arr_val = self.memory.get_arr(ID)
+        arr_val = self.memory.get_arr(
+            ID, self.generator.text_generator.get_current_context()
+        )
         type_, rows, cols = arr_val
         r, c = ctx.arrayIndexExpr()
         r = r.expr()
@@ -251,7 +287,9 @@ class ExprListenerImpl(ExprListener):
 
     def exitArray2dAccess(self, ctx: ExprParser.Array2dAccessContext):
         ID = ctx.ID().getText()
-        type_, rows, cols = self.memory.get_arr(ID)
+        type_, rows, cols = self.memory.get_arr(
+            ID, self.generator.text_generator.get_current_context()
+        )
         r, c = ctx.expr()
 
         if hasattr(r, "getText") and hasattr(c, "getText"):
@@ -284,8 +322,9 @@ class ExprListenerImpl(ExprListener):
         self.generator.while_end_block()
 
     def enterFunction(self, ctx: ExprParser.FunctionContext):
-        id_ = ctx.functionParam().ID().getText()
-        type_ = Type.map_(ctx.TYPE().getText())
+        self.memory.clean_local_variables()
+        function_id_ = ctx.functionParam().ID().getText()
+        function_type_ = Type.map_(ctx.TYPE().getText())
         args = [
             (
                 str(f.ID().getText()),
@@ -294,38 +333,173 @@ class ExprListenerImpl(ExprListener):
             )
             for f in ctx.functionArgs().functionArg()
         ]
-        self.memory.add(id_, type_, True, data=(type_, args), var_type=VarType.FN_VAR)
-        self.generator.fn_start(id_, type_, args)
+        self.memory.add(
+            function_id_,
+            function_type_,
+            True,
+            self.generator.text_generator.get_current_context(),
+            data=(function_type_, args),
+        )
+
+        self.generator.text_generator.set_current_context(Context.FUNCTION)
+        self.generator.text_generator.reset_function_counter()
+
+        context = self.generator.text_generator.get_current_context()
+
+        for i, arg in enumerate(args):
+            id_, type_, mut_ = arg
+
+            _, _, variable = self.memory.set_variable(
+                generator=self.generator,
+                id_=id_,
+                context=context,
+                assign_type=type_,
+                locked_type=True,
+                function_args=True,
+            )
+            args[i] = (variable["llvm_id"], type_, mut_)
+
+        self.generator.fn_start(function_id_, function_type_, args)
 
     def exitFunction(self, ctx: ExprParser.FunctionContext):
         type_ = Type.map_(ctx.TYPE().getText())
         id_ = (
-            ctx.functionReturn().ID().getText()
-            if ctx.functionReturn().ID() is not None
-            else None
+            None
+            if ctx.functionReturn().ID() is None
+            or ctx.functionReturn().ID().getText() == "<missing ID>"
+            else ctx.functionReturn().ID().getText()
         )
+
         # TODO: validate return type match defined
+
+        if id_ is not None:
+            _sign, id_, variable = self.memory.get_variable(
+                id_, self.generator.text_generator.get_current_context()
+            )
+            id_ = variable["llvm_id"]
         self.generator.fn_end(id_, type_)
 
     def exitFunctionCall(self, ctx: ExprParser.FunctionCallContext):
         id_ = ctx.ID().getText()
-        value = self.memory.get(id_, VarType.FN_VAR)
+        value = self.memory.get(id_, Context.HEADER)
         if value is None:
             raise ValueError(f"Function with ID: {id_} does not exist")
         data = value.get("data", None)
         if data is None:
             raise ValueError("Function with ID does not have data")
         type_returned, args_ = data
-        args: list[tuple[str, Type, str, str | None]] = [
+        args: list[tuple[tuple[str, Type], str, str | None]] = [
             (
-                str(id_or_val.getText()),
-                type_,
+                self.memory.stack.pop(),
                 str(param_name),
                 mut,
             )
-            for id_or_val, (param_name, type_, mut) in zip(
+            for _id_or_val, (param_name, _type_, mut) in zip(
                 ctx.functionArgsCall().value(), args_
             )
+        ]  # TODO ARGS  variable["llvm_id"]
+
+        args = args[::-1]
+        self.generator.fn_call(id_, type_returned, args)
+        self.memory.stack.append(
+            (f"%{self.generator.text_generator.get_incremented()-1}", type_returned)
+        )
+
+    def exitGlobalDeclaration(self, ctx: ExprParser.GlobalDeclarationContext):
+        ID = ctx.ID().getText()
+        self.memory.copy_global_to_local(ID)
+
+    def exitDeleteVariable(
+        self, ctx: ExprParser.DeleteVariableContext
+    ):  # TODO WARN will not work!!!
+        ID = ctx.ID().getText()
+        self.memory.remove_variable(
+            ID, self.generator.text_generator.get_current_context()
+        )
+
+    def exitStruct(self, ctx: ExprParser.StructContext):
+        struct_id_ = ctx.structId().ID().getText()
+        block: list[tuple[str, Type]] = [
+            (str(block_id.getText()), Type.map_(block_type.getText()))
+            for block_id, block_type in zip(
+                ctx.structBlock().ID(), ctx.structBlock().TYPE()
+            )
+        ]
+        block = block[::-1]
+        # print(f"{block=}\n\n")
+        self.memory.structs[struct_id_] = {
+            "block": block,
+        }
+        self.generator.struct_start(struct_id_, block)
+        print(f"defining struct {struct_id_} with block {block}")
+
+    def exitStructAssign(self, ctx: ExprParser.StructAssignContext):
+        id_ = ctx.ID().getText()
+        struct_id = ctx.structId().ID().getText()
+        print(f"creating struct {struct_id} with id {id_}")
+
+        self.memory.add(
+            id_,
+            Type.STRUCT,
+            False,
+            self.generator.text_generator.get_current_context(),
+            data=struct_id,
+        )
+
+        print(self.memory)
+        print(f"structs {self.memory.structs}")
+        struct = self.memory.structs[struct_id]
+        block = struct["block"]
+        args: list[tuple[str, Type]] = [
+            self.memory.stack.pop() for _ in range(len(block))
         ]
 
-        self.generator.fn_call(id_, type_returned, args)
+        llvm_id = self.memory.get(
+            id_, self.generator.text_generator.get_current_context()
+        )["llvm_id"]
+
+        self.generator.struct_assign(llvm_id, struct_id, args)  # FIXME TODO
+
+    def exitStructFieldAssign(self, ctx: ExprParser.StructFieldAssignContext):
+        # | ID '.' structField '=' expr								# structFieldAssign
+        id_ = ctx.ID().getText()
+        field = ctx.structField().ID().getText()
+        struct = self.memory.get(
+            id_, self.generator.text_generator.get_current_context()
+        )
+        struct_id = struct["data"]
+        block = self.memory.structs[struct_id]["block"]
+
+        field_index, type_ = next(
+            (i, t) for i, (f, t) in enumerate(block) if f == field
+        )
+
+        print(f'assigning field "{field}" to struct "{id_}"')
+        arg = self.memory.stack.pop()
+        llvm_id = self.memory.get(
+            id_, self.generator.text_generator.get_current_context()
+        )["llvm_id"]
+        self.generator.struct_field_assign(llvm_id, struct_id, field_index, arg)
+
+    def exitStructAccess(self, ctx: ExprParser.StructAccessContext):
+        # ID '.' structField				# structAccess
+        id_ = ctx.ID().getText()
+        field = ctx.structField().ID().getText()
+        print(f'accessing field "{field}" from struct "{id_}"')
+        struct = self.memory.get(
+            id_, self.generator.text_generator.get_current_context()
+        )
+        struct_id = struct["data"]
+        block = self.memory.structs[struct_id]["block"]
+        # %2 = load i32, i32* getelementptr inbounds (%struct.s, %struct.s* @aaa, i32 0, i32 0)
+
+        field_index, type_ = next(
+            (i, t) for i, (f, t) in enumerate(block) if f == field
+        )
+
+        llvm_id = struct["llvm_id"]
+        anon_id = self.generator.struct_load_field(
+            llvm_id, struct_id, field_index, type_
+        )
+        # TODO: variable["data"]["length"]
+        self.memory.stack.append((anon_id, type_))

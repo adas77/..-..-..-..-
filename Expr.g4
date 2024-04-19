@@ -9,9 +9,11 @@ stat:
 	| ID '[' arrayIndexExpr ']' '[' arrayIndexExpr ']' '=' expr	# array2dAssign
 	| 'print' '(' value ')'										# print
 	| 'read' '(' ID ')'											# read
-	| ID '=' '{' expr (',' expr)* '}'							# structAssign
+	| ID '=' structId '{' structArgs '}'						# structAssign
 	| ID '.' structField '=' expr								# structFieldAssign
-	| COMMENT_SINGLELINE										# comment;
+	| COMMENT_SINGLELINE										# comment
+	| 'global' ID												# globalDeclaration
+	| 'del' ID													# deleteVariable;
 
 expr:
 	term								# singleTerm
@@ -29,6 +31,7 @@ expr:
 	| ID functionArgsCall				# functionCall;
 
 structField: ID;
+structArgs: (expr (',' expr)*)?;
 
 arrayIndexExpr: expr;
 icmpExpr: expr;
@@ -41,7 +44,7 @@ function:
 	STARTFUNCTION functionParam functionArgs ':' TYPE functionBlock functionReturn ENDFUNCTION;
 functionParam: ID;
 functionBlock: ( stat? NEWLINE)*;
-functionReturn: ( 'return' ID NEWLINE+)?;
+functionReturn: ( 'return' ID? NEWLINE+)?;
 functionArgs: '(' (functionArg (',' functionArg)*)? ')';
 functionArg: ID ':' MUTABLE? TYPE;
 MUTABLE: 'mut';
@@ -49,7 +52,7 @@ functionArgsCall: '(' (value (',' value)*)? ')';
 STARTFUNCTION: 'fn';
 ENDFUNCTION: 'nf';
 
-struct: STARTSTRUCT structId structBlock ENDSTRUCT;
+struct: STARTSTRUCT structId NEWLINE structBlock ENDSTRUCT;
 structId: ID;
 structBlock: (TYPE ID NEWLINE)*;
 STARTSTRUCT: 'struct';
