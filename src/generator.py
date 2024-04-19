@@ -480,6 +480,11 @@ class LLVMGenerator:
         self.text_generator.increment()
         return f"%{self.text_generator.get_incremented()-1}"
 
+    def generator_start(self, gen_llvm_id, array_id, type_, size):
+        self.text_generator.append_text(
+            f"{gen_llvm_id} = global i32 0", context=Context.HEADER
+        )
+
     # --------------------------------------------------------------------------------
     # --------------------------- PRIVATE METHODS ------------------------------------
     # --------------------------------------------------------------------------------

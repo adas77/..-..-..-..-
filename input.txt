@@ -1,3 +1,15 @@
+int garr[2]
+garr[0] = 123
+garr[1] = 345
+
+gen ge (garr)
+ag = ge<>
+print(ag)
+ag = ge<>
+print(ag)
+#ag = ge<>
+#print(ag)
+
 
 #
 # STRUCT

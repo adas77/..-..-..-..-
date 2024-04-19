@@ -1,39 +1,39 @@
 define i32 @foobar(i32 %0, i32 %1, i32 %2) {
-%var6 = alloca i32
-store i32 %0, i32* %var6
-%var7 = alloca i32
-store i32 %1, i32* %var7
 %var8 = alloca i32
-store i32 %2, i32* %var8
+store i32 %0, i32* %var8
+%var9 = alloca i32
+store i32 %1, i32* %var9
+%var10 = alloca i32
+store i32 %2, i32* %var10
 %4 = alloca i32
 store i32 3721, i32* %4, align 4
 %5 = load i32, i32* %4
-store i32 %5, i32* @var4
+store i32 %5, i32* @var6
 %6 = alloca i8*
-%7 = getelementptr inbounds [9 x i8], [9 x i8]* @string_95337, i32 0, i32 0
+%7 = getelementptr inbounds [9 x i8], [9 x i8]* @string_33619, i32 0, i32 0
 store i8* %7, i8** %6
 %8 = load i8*, i8** %6
 %9  = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @str_string_newline, i32 0, i32 0),i8* %8)
-%10 = load i32, i32* @var4
+%10 = load i32, i32* @var6
 %11 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @str_int_newline, i32 0, i32 0),i32 %10)
 %12 = alloca i32
 store i32 67, i32* %12, align 4
 %13 = load i32, i32* %12
-store i32 %13, i32* %var8
+store i32 %13, i32* %var10
 %14 = alloca i8*
-%15 = getelementptr inbounds [4 x i8], [4 x i8]* @string_89164, i32 0, i32 0
+%15 = getelementptr inbounds [4 x i8], [4 x i8]* @string_11102, i32 0, i32 0
 store i8* %15, i8** %14
 %16 = load i8*, i8** %14
 %17  = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @str_string_newline, i32 0, i32 0),i8* %16)
-%18 = load i32, i32* %var8
+%18 = load i32, i32* %var10
 %19 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @str_int_newline, i32 0, i32 0),i32 %18)
-%20 = load i32, i32* %var6
-%21 = load i32, i32* %var6
+%20 = load i32, i32* %var8
+%21 = load i32, i32* %var8
 %22 = mul i32 %20, %21
-%23 = load i32, i32* %var7
+%23 = load i32, i32* %var9
 %24 = add i32 %22, %23
-store i32 %24, i32* %var6
-%25 = load i32, i32* %var6
+store i32 %24, i32* %var8
+%25 = load i32, i32* %var8
 ret i32 %25
 }
 
@@ -52,297 +52,326 @@ declare i32 @__isoc99_scanf(i8*, ...)
 @str_double = constant [4 x i8] c"%lf\00"
 @str_string = constant [3 x i8] c"%s\00"
 @str_float = constant [3 x i8] c"%f\00"
-%struct.s1 = type { float, i32 }
-@var1 = global %struct.s1 zeroinitializer
+@genrator_it_442 = global i32 0
 @var2 = global i32 0
-@var3 = global float 0.0
+%struct.s1 = type { float, i32 }
+@var3 = global %struct.s1 zeroinitializer
 @var4 = global i32 0
-@string_95337 = constant [9 x i8] c"globalna\00"
-@string_89164 = constant [4 x i8] c"arg\00"
-@var9 = global i32 0
-@var10 = global i32 0
-@string_89604 = constant [11 x i8] c"arg before\00"
+@var5 = global float 0.0
+@var6 = global i32 0
+@string_33619 = constant [9 x i8] c"globalna\00"
+@string_11102 = constant [4 x i8] c"arg\00"
 @var11 = global i32 0
-@string_66190 = constant [10 x i8] c"arg after\00"
-@string_45396 = constant [10 x i8] c"resfoobar\00"
 @var12 = global i32 0
-@string_89873 = constant [12 x i8] c"dynamic int\00"
-@string_72179 = constant [11 x i8] c"now string\00"
-@var13 = global i8* null
-@string_28660 = constant [15 x i8] c"dynamic string\00"
+@string_20 = constant [11 x i8] c"arg before\00"
+@var13 = global i32 0
+@string_23288 = constant [10 x i8] c"arg after\00"
+@string_542 = constant [10 x i8] c"resfoobar\00"
 @var14 = global i32 0
-@string_94424 = constant [10 x i8] c"logical a\00"
-@var15 = global i32 0
-@var16 = global double 0.0
-@string_79169 = constant [10 x i8] c"logical a\00"
+@string_56756 = constant [12 x i8] c"dynamic int\00"
+@string_85204 = constant [11 x i8] c"now string\00"
+@var15 = global i8* null
+@string_73154 = constant [15 x i8] c"dynamic string\00"
+@var16 = global i32 0
+@string_24389 = constant [10 x i8] c"logical a\00"
 @var17 = global i32 0
-@var18 = global i32 0
+@var18 = global double 0.0
+@string_35196 = constant [10 x i8] c"logical a\00"
 @var19 = global i32 0
-@string_85319 = constant [11 x i8] c"logical cc\00"
 @var20 = global i32 0
 @var21 = global i32 0
-@string_45160 = constant [4 x i8] c"---\00"
-@string_595 = constant [18 x i8] c"Jestem if w while\00"
+@string_67315 = constant [11 x i8] c"logical cc\00"
 @var22 = global i32 0
-@string_42931 = constant [15 x i8] c"Jestem if w if\00"
-@string_83044 = constant [26 x i8] c"Jestem while w if w while\00"
-@string_21033 = constant [12 x i8] c"Nie ma mnie\00"
-@var23 = global double 0.0
-@string_68878 = constant [4 x i8] c"dou\00"
-@string_95435 = constant [8 x i8] c"readstr\00"
-@var24 = global i8* null
-@var25 = global i32 0
-@var26 = global float 0.0
-@var29 = global i32 0
-@var30 = global i32 0
+@var23 = global i32 0
+@string_6348 = constant [4 x i8] c"---\00"
+@string_19949 = constant [18 x i8] c"Jestem if w while\00"
+@var24 = global i32 0
+@string_43759 = constant [15 x i8] c"Jestem if w if\00"
+@string_88137 = constant [26 x i8] c"Jestem while w if w while\00"
+@string_28027 = constant [12 x i8] c"Nie ma mnie\00"
+@var25 = global double 0.0
+@string_86413 = constant [4 x i8] c"dou\00"
+@string_93340 = constant [8 x i8] c"readstr\00"
+@var26 = global i8* null
+@var27 = global i32 0
+@var28 = global float 0.0
+@var31 = global i32 0
+@var32 = global i32 0
 
 define i32 @main() nounwind {
+%garr = alloca [2 x i32], align 8
 %1 = alloca i32
-store i32 10, i32* %1, align 4
+store i32 0, i32* %1, align 4
 %2 = load i32, i32* %1
-%3 = alloca float
-store float 0x3fe4937400000000, float* %3, align 4
-%4 = load float, float* %3
-%5 = getelementptr %struct.s1, %struct.s1* @var1, i32 0, i32 0
-store float %4, float* %5
-%6 = getelementptr %struct.s1, %struct.s1* @var1, i32 0, i32 1
-store i32 %2, i32* %6
-%7 = alloca i32
-store i32 123, i32* %7, align 4
-%8 = load i32, i32* %7
-%9 = getelementptr %struct.s1, %struct.s1* @var1, i32 0, i32 1
-store i32 %8, i32* %9
-%10 = getelementptr %struct.s1, %struct.s1* @var1, i32 0, i32 1
-%11 = load i32, i32* %10
-store i32 %11, i32* @var2
-%12 = getelementptr %struct.s1, %struct.s1* @var1, i32 0, i32 0
-%13 = load float, float* %12
-store float %13, float* @var3
-%14 = load i32, i32* @var2
-%15 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @str_int_newline, i32 0, i32 0),i32 %14)
-%16 = load float, float* @var3
-%17 = fpext float %16 to double
-%18 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @str_float_newline, i32 0, i32 0),double %17)
+%3 = alloca i32
+store i32 123, i32* %3, align 4
+%4 = load i32, i32* %3
+%5 = getelementptr [2 x i32], [2 x i32]* %garr, i32 0, i32 0
+store i32 123, i32* %5
+%6 = alloca i32
+store i32 1, i32* %6, align 4
+%7 = load i32, i32* %6
+%8 = alloca i32
+store i32 345, i32* %8, align 4
+%9 = load i32, i32* %8
+%10 = getelementptr [2 x i32], [2 x i32]* %garr, i32 0, i32 1
+store i32 345, i32* %10
+%11 = getelementptr [2 x i32], [2 x i32]* %garr, i32 0, i32 0
+%12 = load i32, i32* %11
+store i32 %12, i32* @var2
+%13 = load i32, i32* @var2
+%14 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @str_int_newline, i32 0, i32 0),i32 %13)
+%15 = getelementptr [2 x i32], [2 x i32]* %garr, i32 0, i32 1
+%16 = load i32, i32* %15
+store i32 %16, i32* @var2
+%17 = load i32, i32* @var2
+%18 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @str_int_newline, i32 0, i32 0),i32 %17)
 %19 = alloca i32
-store i32 4, i32* %19, align 4
+store i32 10, i32* %19, align 4
 %20 = load i32, i32* %19
-store i32 %20, i32* @var4
-%21 = alloca i32
-store i32 5, i32* %21, align 4
-%22 = load i32, i32* %21
-store i32 %22, i32* @var9
-%23 = alloca i32
-store i32 5, i32* %23, align 4
-%24 = load i32, i32* %23
-store i32 %24, i32* @var10
-%25 = alloca i8*
-%26 = getelementptr inbounds [11 x i8], [11 x i8]* @string_89604, i32 0, i32 0
-store i8* %26, i8** %25
-%27 = load i8*, i8** %25
-%28  = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @str_string_newline, i32 0, i32 0),i8* %27)
-%29 = load i32, i32* @var10
-%30 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @str_int_newline, i32 0, i32 0),i32 %29)
-%31 = load i32, i32* @var9
-%32 = alloca i32
-store i32 4, i32* %32, align 4
-%33 = load i32, i32* %32
-%34 = load i32, i32* @var10
-%35 = call i32 @foobar(i32 %31, i32 %33, i32 %34)
-store i32 %35, i32* @var11
-%36 = alloca i8*
-%37 = getelementptr inbounds [10 x i8], [10 x i8]* @string_66190, i32 0, i32 0
-store i8* %37, i8** %36
-%38 = load i8*, i8** %36
-%39  = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @str_string_newline, i32 0, i32 0),i8* %38)
-%40 = load i32, i32* @var10
-%41 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @str_int_newline, i32 0, i32 0),i32 %40)
-%42 = alloca i8*
-%43 = getelementptr inbounds [10 x i8], [10 x i8]* @string_45396, i32 0, i32 0
-store i8* %43, i8** %42
-%44 = load i8*, i8** %42
-%45  = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @str_string_newline, i32 0, i32 0),i8* %44)
-%46 = load i32, i32* @var11
-%47 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @str_int_newline, i32 0, i32 0),i32 %46)
-%48 = alloca i32
-store i32 3456, i32* %48, align 4
-%49 = load i32, i32* %48
-store i32 %49, i32* @var12
-%50 = alloca i8*
-%51 = getelementptr inbounds [12 x i8], [12 x i8]* @string_89873, i32 0, i32 0
-store i8* %51, i8** %50
-%52 = load i8*, i8** %50
-%53  = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @str_string_newline, i32 0, i32 0),i8* %52)
-%54 = load i32, i32* @var12
-%55 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @str_int_newline, i32 0, i32 0),i32 %54)
-%56 = alloca i8*
-%57 = getelementptr inbounds [11 x i8], [11 x i8]* @string_72179, i32 0, i32 0
-store i8* %57, i8** %56
-%58 = load i8*, i8** %56
-store i8* %58, i8** @var13
-%59 = alloca i8*
-%60 = getelementptr inbounds [15 x i8], [15 x i8]* @string_28660, i32 0, i32 0
-store i8* %60, i8** %59
-%61 = load i8*, i8** %59
-%62  = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @str_string_newline, i32 0, i32 0),i8* %61)
-%63 = load i8*, i8** @var13
-%64  = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @str_string_newline, i32 0, i32 0),i8* %63)
-%65 = alloca i32
-store i32 1, i32* %65, align 4
-%66 = load i32, i32* %65
-%67 = alloca i32
-store i32 0, i32* %67, align 4
-%68 = load i32, i32* %67
-%69 = and i32 %66, %68
-store i32 %69, i32* @var14
-%70 = alloca i8*
-%71 = getelementptr inbounds [10 x i8], [10 x i8]* @string_94424, i32 0, i32 0
-store i8* %71, i8** %70
-%72 = load i8*, i8** %70
-%73  = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @str_string_newline, i32 0, i32 0),i8* %72)
-%74 = load i32, i32* @var14
-%75 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @str_int_newline, i32 0, i32 0),i32 %74)
-%76 = load i32, i32* @var14
-%77 = alloca i32
-store i32 2, i32* %77, align 4
-%78 = load i32, i32* %77
-%79 = alloca i32
-store i32 4, i32* %79, align 4
-%80 = load i32, i32* %79
-%81 = alloca i32
-store i32 6, i32* %81, align 4
-%82 = load i32, i32* %81
+%21 = alloca float
+store float 0x3fe4937400000000, float* %21, align 4
+%22 = load float, float* %21
+%23 = getelementptr %struct.s1, %struct.s1* @var3, i32 0, i32 0
+store float %22, float* %23
+%24 = getelementptr %struct.s1, %struct.s1* @var3, i32 0, i32 1
+store i32 %20, i32* %24
+%25 = alloca i32
+store i32 123, i32* %25, align 4
+%26 = load i32, i32* %25
+%27 = getelementptr %struct.s1, %struct.s1* @var3, i32 0, i32 1
+store i32 %26, i32* %27
+%28 = getelementptr %struct.s1, %struct.s1* @var3, i32 0, i32 1
+%29 = load i32, i32* %28
+store i32 %29, i32* @var4
+%30 = getelementptr %struct.s1, %struct.s1* @var3, i32 0, i32 0
+%31 = load float, float* %30
+store float %31, float* @var5
+%32 = load i32, i32* @var4
+%33 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @str_int_newline, i32 0, i32 0),i32 %32)
+%34 = load float, float* @var5
+%35 = fpext float %34 to double
+%36 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @str_float_newline, i32 0, i32 0),double %35)
+%37 = alloca i32
+store i32 4, i32* %37, align 4
+%38 = load i32, i32* %37
+store i32 %38, i32* @var6
+%39 = alloca i32
+store i32 5, i32* %39, align 4
+%40 = load i32, i32* %39
+store i32 %40, i32* @var11
+%41 = alloca i32
+store i32 5, i32* %41, align 4
+%42 = load i32, i32* %41
+store i32 %42, i32* @var12
+%43 = alloca i8*
+%44 = getelementptr inbounds [11 x i8], [11 x i8]* @string_20, i32 0, i32 0
+store i8* %44, i8** %43
+%45 = load i8*, i8** %43
+%46  = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @str_string_newline, i32 0, i32 0),i8* %45)
+%47 = load i32, i32* @var12
+%48 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @str_int_newline, i32 0, i32 0),i32 %47)
+%49 = load i32, i32* @var11
+%50 = alloca i32
+store i32 4, i32* %50, align 4
+%51 = load i32, i32* %50
+%52 = load i32, i32* @var12
+%53 = call i32 @foobar(i32 %49, i32 %51, i32 %52)
+store i32 %53, i32* @var13
+%54 = alloca i8*
+%55 = getelementptr inbounds [10 x i8], [10 x i8]* @string_23288, i32 0, i32 0
+store i8* %55, i8** %54
+%56 = load i8*, i8** %54
+%57  = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @str_string_newline, i32 0, i32 0),i8* %56)
+%58 = load i32, i32* @var12
+%59 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @str_int_newline, i32 0, i32 0),i32 %58)
+%60 = alloca i8*
+%61 = getelementptr inbounds [10 x i8], [10 x i8]* @string_542, i32 0, i32 0
+store i8* %61, i8** %60
+%62 = load i8*, i8** %60
+%63  = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @str_string_newline, i32 0, i32 0),i8* %62)
+%64 = load i32, i32* @var13
+%65 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @str_int_newline, i32 0, i32 0),i32 %64)
+%66 = alloca i32
+store i32 3456, i32* %66, align 4
+%67 = load i32, i32* %66
+store i32 %67, i32* @var14
+%68 = alloca i8*
+%69 = getelementptr inbounds [12 x i8], [12 x i8]* @string_56756, i32 0, i32 0
+store i8* %69, i8** %68
+%70 = load i8*, i8** %68
+%71  = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @str_string_newline, i32 0, i32 0),i8* %70)
+%72 = load i32, i32* @var14
+%73 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @str_int_newline, i32 0, i32 0),i32 %72)
+%74 = alloca i8*
+%75 = getelementptr inbounds [11 x i8], [11 x i8]* @string_85204, i32 0, i32 0
+store i8* %75, i8** %74
+%76 = load i8*, i8** %74
+store i8* %76, i8** @var15
+%77 = alloca i8*
+%78 = getelementptr inbounds [15 x i8], [15 x i8]* @string_73154, i32 0, i32 0
+store i8* %78, i8** %77
+%79 = load i8*, i8** %77
+%80  = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @str_string_newline, i32 0, i32 0),i8* %79)
+%81 = load i8*, i8** @var15
+%82  = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @str_string_newline, i32 0, i32 0),i8* %81)
 %83 = alloca i32
 store i32 1, i32* %83, align 4
 %84 = load i32, i32* %83
-%85 = sub i32 %82, %84
-%86 = add i32 %80, %85
-%87 = add i32 %78, %86
-%88 = add i32 %76, %87
-store i32 %88, i32* @var15
-%89 = alloca double
-store double 0x3ff0000000000000, double* %89, align 4
-%90 = load double, double* %89
-%91 = alloca double
-store double 0x4000020c49ba5e35, double* %91, align 4
-%92 = load double, double* %91
-%93 = fsub double %90, %92
-store double %93, double* @var16
-%94 = load i32, i32* @var15
-%95 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @str_int_newline, i32 0, i32 0),i32 %94)
-%96 = load double, double* @var16
-%97 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([5 x i8], [5 x i8]* @str_double_newline, i32 0, i32 0),double %96)
-%98 = alloca i32
-store i32 1, i32* %98, align 4
-%99 = load i32, i32* %98
-%100 = alloca i32
-store i32 0, i32* %100, align 4
-%101 = load i32, i32* %100
-%102 = or i32 %99, %101
-store i32 %102, i32* @var14
-%103 = alloca i8*
-%104 = getelementptr inbounds [10 x i8], [10 x i8]* @string_79169, i32 0, i32 0
-store i8* %104, i8** %103
-%105 = load i8*, i8** %103
-%106  = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @str_string_newline, i32 0, i32 0),i8* %105)
-%107 = load i32, i32* @var14
-%108 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @str_int_newline, i32 0, i32 0),i32 %107)
-%109 = alloca i32
-store i32 11, i32* %109, align 4
-%110 = load i32, i32* %109
-store i32 %110, i32* @var17
-%111 = alloca i32
-store i32 21, i32* %111, align 4
-%112 = load i32, i32* %111
-store i32 %112, i32* @var18
-%113 = load i32, i32* @var17
-%114 = load i32, i32* @var18
-%115 = and i32 %113, %114
-store i32 %115, i32* @var19
-%116 = alloca i8*
-%117 = getelementptr inbounds [11 x i8], [11 x i8]* @string_85319, i32 0, i32 0
-store i8* %117, i8** %116
-%118 = load i8*, i8** %116
-%119  = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @str_string_newline, i32 0, i32 0),i8* %118)
-%120 = load i32, i32* @var19
-%121 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @str_int_newline, i32 0, i32 0),i32 %120)
-%122 = alloca i32
-store i32 10, i32* %122, align 4
-%123 = load i32, i32* %122
-store i32 %123, i32* @var20
+%85 = alloca i32
+store i32 0, i32* %85, align 4
+%86 = load i32, i32* %85
+%87 = and i32 %84, %86
+store i32 %87, i32* @var16
+%88 = alloca i8*
+%89 = getelementptr inbounds [10 x i8], [10 x i8]* @string_24389, i32 0, i32 0
+store i8* %89, i8** %88
+%90 = load i8*, i8** %88
+%91  = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @str_string_newline, i32 0, i32 0),i8* %90)
+%92 = load i32, i32* @var16
+%93 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @str_int_newline, i32 0, i32 0),i32 %92)
+%94 = load i32, i32* @var16
+%95 = alloca i32
+store i32 2, i32* %95, align 4
+%96 = load i32, i32* %95
+%97 = alloca i32
+store i32 4, i32* %97, align 4
+%98 = load i32, i32* %97
+%99 = alloca i32
+store i32 6, i32* %99, align 4
+%100 = load i32, i32* %99
+%101 = alloca i32
+store i32 1, i32* %101, align 4
+%102 = load i32, i32* %101
+%103 = sub i32 %100, %102
+%104 = add i32 %98, %103
+%105 = add i32 %96, %104
+%106 = add i32 %94, %105
+store i32 %106, i32* @var17
+%107 = alloca double
+store double 0x3ff0000000000000, double* %107, align 4
+%108 = load double, double* %107
+%109 = alloca double
+store double 0x4000020c49ba5e35, double* %109, align 4
+%110 = load double, double* %109
+%111 = fsub double %108, %110
+store double %111, double* @var18
+%112 = load i32, i32* @var17
+%113 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @str_int_newline, i32 0, i32 0),i32 %112)
+%114 = load double, double* @var18
+%115 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([5 x i8], [5 x i8]* @str_double_newline, i32 0, i32 0),double %114)
+%116 = alloca i32
+store i32 1, i32* %116, align 4
+%117 = load i32, i32* %116
+%118 = alloca i32
+store i32 0, i32* %118, align 4
+%119 = load i32, i32* %118
+%120 = or i32 %117, %119
+store i32 %120, i32* @var16
+%121 = alloca i8*
+%122 = getelementptr inbounds [10 x i8], [10 x i8]* @string_35196, i32 0, i32 0
+store i8* %122, i8** %121
+%123 = load i8*, i8** %121
+%124  = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @str_string_newline, i32 0, i32 0),i8* %123)
+%125 = load i32, i32* @var16
+%126 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @str_int_newline, i32 0, i32 0),i32 %125)
+%127 = alloca i32
+store i32 11, i32* %127, align 4
+%128 = load i32, i32* %127
+store i32 %128, i32* @var19
+%129 = alloca i32
+store i32 21, i32* %129, align 4
+%130 = load i32, i32* %129
+store i32 %130, i32* @var20
+%131 = load i32, i32* @var19
+%132 = load i32, i32* @var20
+%133 = and i32 %131, %132
+store i32 %133, i32* @var21
+%134 = alloca i8*
+%135 = getelementptr inbounds [11 x i8], [11 x i8]* @string_67315, i32 0, i32 0
+store i8* %135, i8** %134
+%136 = load i8*, i8** %134
+%137  = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @str_string_newline, i32 0, i32 0),i8* %136)
+%138 = load i32, i32* @var21
+%139 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @str_int_newline, i32 0, i32 0),i32 %138)
+%140 = alloca i32
+store i32 10, i32* %140, align 4
+%141 = load i32, i32* %140
+store i32 %141, i32* @var22
 br label %while1
 while1:
-%124 = load i32, i32* @var20
-%125 = alloca i32
-store i32 2, i32* %125, align 4
-%126 = load i32, i32* %125
-%127 = add i32 %124, %126
-%128 = icmp ne i32 %127, 0
-br i1 %128, label %while_body1, label %elihw1
-while_body1:
-%129 = load i32, i32* @var20
-%130 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @str_int_newline, i32 0, i32 0),i32 %129)
-%131 = load i32, i32* @var20
-%132 = alloca i32
-store i32 2, i32* %132, align 4
-%133 = load i32, i32* %132
-%134 = sub i32 %131, %133
-store i32 %134, i32* @var20
-%135 = alloca i32
-store i32 3, i32* %135, align 4
-%136 = load i32, i32* %135
-store i32 %136, i32* @var21
-%137 = load i32, i32* @var20
-%138 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @str_int_newline, i32 0, i32 0),i32 %137)
-%139 = alloca i8*
-%140 = getelementptr inbounds [4 x i8], [4 x i8]* @string_45160, i32 0, i32 0
-store i8* %140, i8** %139
-%141 = load i8*, i8** %139
-%142  = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @str_string_newline, i32 0, i32 0),i8* %141)
+%142 = load i32, i32* @var22
 %143 = alloca i32
-store i32 1, i32* %143, align 4
+store i32 2, i32* %143, align 4
 %144 = load i32, i32* %143
-%145 = icmp ne i32 %144, 0
-br i1 %145, label %if1, label %fi1
-if1:
-%146 = alloca i8*
-%147 = getelementptr inbounds [18 x i8], [18 x i8]* @string_595, i32 0, i32 0
-store i8* %147, i8** %146
-%148 = load i8*, i8** %146
-%149  = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @str_string_newline, i32 0, i32 0),i8* %148)
+%145 = add i32 %142, %144
+%146 = icmp ne i32 %145, 0
+br i1 %146, label %while_body1, label %elihw1
+while_body1:
+%147 = load i32, i32* @var22
+%148 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @str_int_newline, i32 0, i32 0),i32 %147)
+%149 = load i32, i32* @var22
 %150 = alloca i32
-store i32 5, i32* %150, align 4
+store i32 2, i32* %150, align 4
 %151 = load i32, i32* %150
-store i32 %151, i32* @var22
-%152 = alloca i32
-store i32 1, i32* %152, align 4
-%153 = load i32, i32* %152
-%154 = icmp ne i32 %153, 0
-br i1 %154, label %if2, label %fi2
+%152 = sub i32 %149, %151
+store i32 %152, i32* @var22
+%153 = alloca i32
+store i32 3, i32* %153, align 4
+%154 = load i32, i32* %153
+store i32 %154, i32* @var23
+%155 = load i32, i32* @var22
+%156 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @str_int_newline, i32 0, i32 0),i32 %155)
+%157 = alloca i8*
+%158 = getelementptr inbounds [4 x i8], [4 x i8]* @string_6348, i32 0, i32 0
+store i8* %158, i8** %157
+%159 = load i8*, i8** %157
+%160  = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @str_string_newline, i32 0, i32 0),i8* %159)
+%161 = alloca i32
+store i32 1, i32* %161, align 4
+%162 = load i32, i32* %161
+%163 = icmp ne i32 %162, 0
+br i1 %163, label %if1, label %fi1
+if1:
+%164 = alloca i8*
+%165 = getelementptr inbounds [18 x i8], [18 x i8]* @string_19949, i32 0, i32 0
+store i8* %165, i8** %164
+%166 = load i8*, i8** %164
+%167  = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @str_string_newline, i32 0, i32 0),i8* %166)
+%168 = alloca i32
+store i32 5, i32* %168, align 4
+%169 = load i32, i32* %168
+store i32 %169, i32* @var24
+%170 = alloca i32
+store i32 1, i32* %170, align 4
+%171 = load i32, i32* %170
+%172 = icmp ne i32 %171, 0
+br i1 %172, label %if2, label %fi2
 if2:
-%155 = alloca i8*
-%156 = getelementptr inbounds [15 x i8], [15 x i8]* @string_42931, i32 0, i32 0
-store i8* %156, i8** %155
-%157 = load i8*, i8** %155
-%158  = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @str_string_newline, i32 0, i32 0),i8* %157)
+%173 = alloca i8*
+%174 = getelementptr inbounds [15 x i8], [15 x i8]* @string_43759, i32 0, i32 0
+store i8* %174, i8** %173
+%175 = load i8*, i8** %173
+%176  = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @str_string_newline, i32 0, i32 0),i8* %175)
 br label %fi2
 fi2:
 br label %while2
 while2:
-%159 = load i32, i32* @var22
-%160 = icmp ne i32 %159, 0
-br i1 %160, label %while_body2, label %elihw2
+%177 = load i32, i32* @var24
+%178 = icmp ne i32 %177, 0
+br i1 %178, label %while_body2, label %elihw2
 while_body2:
-%161 = alloca i8*
-%162 = getelementptr inbounds [26 x i8], [26 x i8]* @string_83044, i32 0, i32 0
-store i8* %162, i8** %161
-%163 = load i8*, i8** %161
-%164  = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @str_string_newline, i32 0, i32 0),i8* %163)
-%165 = load i32, i32* @var22
-%166 = alloca i32
-store i32 1, i32* %166, align 4
-%167 = load i32, i32* %166
-%168 = sub i32 %165, %167
-store i32 %168, i32* @var22
+%179 = alloca i8*
+%180 = getelementptr inbounds [26 x i8], [26 x i8]* @string_88137, i32 0, i32 0
+store i8* %180, i8** %179
+%181 = load i8*, i8** %179
+%182  = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @str_string_newline, i32 0, i32 0),i8* %181)
+%183 = load i32, i32* @var24
+%184 = alloca i32
+store i32 1, i32* %184, align 4
+%185 = load i32, i32* %184
+%186 = sub i32 %183, %185
+store i32 %186, i32* @var24
 br label %while2
 elihw2:
 br label %fi1
@@ -351,157 +380,157 @@ br label %while1
 elihw1:
 br label %while3
 while3:
-%169 = alloca i32
-store i32 0, i32* %169, align 4
-%170 = load i32, i32* %169
-%171 = icmp ne i32 %170, 0
-br i1 %171, label %while_body3, label %elihw3
+%187 = alloca i32
+store i32 0, i32* %187, align 4
+%188 = load i32, i32* %187
+%189 = icmp ne i32 %188, 0
+br i1 %189, label %while_body3, label %elihw3
 while_body3:
-%172 = alloca i8*
-%173 = getelementptr inbounds [12 x i8], [12 x i8]* @string_21033, i32 0, i32 0
-store i8* %173, i8** %172
-%174 = load i8*, i8** %172
-%175  = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @str_string_newline, i32 0, i32 0),i8* %174)
-br label %while3
-elihw3:
-%176 = alloca double
-store double 0x3f50624dd2f1a9fc, double* %176, align 4
-%177 = load double, double* %176
-%178 = alloca double
-store double 0x3ff0000000000000, double* %178, align 4
-%179 = load double, double* %178
-%180 = fadd double %177, %179
-%181 = alloca double
-store double 0x40091eb851eb851f, double* %181, align 4
-%182 = load double, double* %181
-%183 = fdiv double %180, %182
-store double %183, double* @var23
-%184 = alloca i8*
-%185 = getelementptr inbounds [4 x i8], [4 x i8]* @string_68878, i32 0, i32 0
-store i8* %185, i8** %184
-%186 = load i8*, i8** %184
-%187  = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @str_string_newline, i32 0, i32 0),i8* %186)
-%188 = load double, double* @var23
-%189 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([5 x i8], [5 x i8]* @str_double_newline, i32 0, i32 0),double %188)
 %190 = alloca i8*
-%191 = getelementptr inbounds [8 x i8], [8 x i8]* @string_95435, i32 0, i32 0
+%191 = getelementptr inbounds [12 x i8], [12 x i8]* @string_28027, i32 0, i32 0
 store i8* %191, i8** %190
 %192 = load i8*, i8** %190
-store i8* %192, i8** @var24
-%193 = alloca i32
-store i32 56, i32* %193, align 4
-%194 = load i32, i32* %193
-store i32 %194, i32* @var25
-%195 = alloca float
-store float 0x0000000000000000, float* %195, align 4
-%196 = load float, float* %195
-store float %196, float* @var26
-%197 = alloca i8, i32 100
-%198 = call i32 (i8*, ...) @__isoc99_scanf(i8* getelementptr inbounds ([3 x i8], [3 x i8]* @str_string, i32 0, i32 0),i8* %197)
-store i8* %197, i8** @var24
-%199 = load i8*, i8** @var24
-%200  = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @str_string_newline, i32 0, i32 0),i8* %199)
-%201 = call i32 (i8*, ...) @__isoc99_scanf(i8* getelementptr inbounds ([3 x i8], [3 x i8]* @str_int, i32 0, i32 0),i32* @var25)
-%202 = load i32, i32* @var25
-%203 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @str_int_newline, i32 0, i32 0),i32 %202)
-%204 = call i32 (i8*, ...) @__isoc99_scanf(i8* getelementptr inbounds ([3 x i8], [3 x i8]* @str_float, i32 0, i32 0),float* @var26)
-%205 = load float, float* @var26
-%206 = fpext float %205 to double
-%207 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @str_float_newline, i32 0, i32 0),double %206)
+%193  = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @str_string_newline, i32 0, i32 0),i8* %192)
+br label %while3
+elihw3:
+%194 = alloca double
+store double 0x3f50624dd2f1a9fc, double* %194, align 4
+%195 = load double, double* %194
+%196 = alloca double
+store double 0x3ff0000000000000, double* %196, align 4
+%197 = load double, double* %196
+%198 = fadd double %195, %197
+%199 = alloca double
+store double 0x40091eb851eb851f, double* %199, align 4
+%200 = load double, double* %199
+%201 = fdiv double %198, %200
+store double %201, double* @var25
+%202 = alloca i8*
+%203 = getelementptr inbounds [4 x i8], [4 x i8]* @string_86413, i32 0, i32 0
+store i8* %203, i8** %202
+%204 = load i8*, i8** %202
+%205  = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @str_string_newline, i32 0, i32 0),i8* %204)
+%206 = load double, double* @var25
+%207 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([5 x i8], [5 x i8]* @str_double_newline, i32 0, i32 0),double %206)
+%208 = alloca i8*
+%209 = getelementptr inbounds [8 x i8], [8 x i8]* @string_93340, i32 0, i32 0
+store i8* %209, i8** %208
+%210 = load i8*, i8** %208
+store i8* %210, i8** @var26
+%211 = alloca i32
+store i32 56, i32* %211, align 4
+%212 = load i32, i32* %211
+store i32 %212, i32* @var27
+%213 = alloca float
+store float 0x0000000000000000, float* %213, align 4
+%214 = load float, float* %213
+store float %214, float* @var28
+%215 = alloca i8, i32 100
+%216 = call i32 (i8*, ...) @__isoc99_scanf(i8* getelementptr inbounds ([3 x i8], [3 x i8]* @str_string, i32 0, i32 0),i8* %215)
+store i8* %215, i8** @var26
+%217 = load i8*, i8** @var26
+%218  = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @str_string_newline, i32 0, i32 0),i8* %217)
+%219 = call i32 (i8*, ...) @__isoc99_scanf(i8* getelementptr inbounds ([3 x i8], [3 x i8]* @str_int, i32 0, i32 0),i32* @var27)
+%220 = load i32, i32* @var27
+%221 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @str_int_newline, i32 0, i32 0),i32 %220)
+%222 = call i32 (i8*, ...) @__isoc99_scanf(i8* getelementptr inbounds ([3 x i8], [3 x i8]* @str_float, i32 0, i32 0),float* @var28)
+%223 = load float, float* @var28
+%224 = fpext float %223 to double
+%225 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @str_float_newline, i32 0, i32 0),double %224)
 %arr = alloca [6 x i32], align 8
 %arr2 = alloca [2 x i32], align 8
-%208 = alloca i32
-store i32 1, i32* %208, align 4
-%209 = load i32, i32* %208
-%210 = alloca i32
-store i32 309, i32* %210, align 4
-%211 = load i32, i32* %210
-%212 = getelementptr [2 x i32], [2 x i32]* %arr2, i32 0, i32 1
-store i32 309, i32* %212
-%213 = alloca i32
-store i32 0, i32* %213, align 4
-%214 = load i32, i32* %213
-%215 = alloca i32
-store i32 0, i32* %215, align 4
-%216 = load i32, i32* %215
-%217 = alloca i32
-store i32 0, i32* %217, align 4
-%218 = load i32, i32* %217
-%219 = getelementptr [6 x i32], [6 x i32]* %arr, i32 0, i32 0
-store i32 0, i32* %219
-%220 = alloca i32
-store i32 0, i32* %220, align 4
-%221 = load i32, i32* %220
-%222 = alloca i32
-store i32 1, i32* %222, align 4
-%223 = load i32, i32* %222
-%224 = alloca i32
-store i32 0, i32* %224, align 4
-%225 = load i32, i32* %224
-%226 = getelementptr [6 x i32], [6 x i32]* %arr, i32 0, i32 1
-store i32 0, i32* %226
-%227 = alloca i32
-store i32 0, i32* %227, align 4
-%228 = load i32, i32* %227
-%229 = alloca i32
-store i32 2, i32* %229, align 4
-%230 = load i32, i32* %229
+%226 = alloca i32
+store i32 1, i32* %226, align 4
+%227 = load i32, i32* %226
+%228 = alloca i32
+store i32 309, i32* %228, align 4
+%229 = load i32, i32* %228
+%230 = getelementptr [2 x i32], [2 x i32]* %arr2, i32 0, i32 1
+store i32 309, i32* %230
 %231 = alloca i32
 store i32 0, i32* %231, align 4
 %232 = load i32, i32* %231
-%233 = getelementptr [6 x i32], [6 x i32]* %arr, i32 0, i32 2
-store i32 0, i32* %233
-%234 = alloca i32
-store i32 1, i32* %234, align 4
-%235 = load i32, i32* %234
-%236 = alloca i32
-store i32 0, i32* %236, align 4
-%237 = load i32, i32* %236
+%233 = alloca i32
+store i32 0, i32* %233, align 4
+%234 = load i32, i32* %233
+%235 = alloca i32
+store i32 0, i32* %235, align 4
+%236 = load i32, i32* %235
+%237 = getelementptr [6 x i32], [6 x i32]* %arr, i32 0, i32 0
+store i32 0, i32* %237
 %238 = alloca i32
 store i32 0, i32* %238, align 4
 %239 = load i32, i32* %238
-%240 = getelementptr [6 x i32], [6 x i32]* %arr, i32 0, i32 3
-store i32 0, i32* %240
-%241 = alloca i32
-store i32 1, i32* %241, align 4
-%242 = load i32, i32* %241
-%243 = alloca i32
-store i32 1, i32* %243, align 4
-%244 = load i32, i32* %243
+%240 = alloca i32
+store i32 1, i32* %240, align 4
+%241 = load i32, i32* %240
+%242 = alloca i32
+store i32 0, i32* %242, align 4
+%243 = load i32, i32* %242
+%244 = getelementptr [6 x i32], [6 x i32]* %arr, i32 0, i32 1
+store i32 0, i32* %244
 %245 = alloca i32
-store i32 30, i32* %245, align 4
+store i32 0, i32* %245, align 4
 %246 = load i32, i32* %245
-%247 = getelementptr [6 x i32], [6 x i32]* %arr, i32 0, i32 4
-store i32 30, i32* %247
-%248 = alloca i32
-store i32 1, i32* %248, align 4
-%249 = load i32, i32* %248
-%250 = alloca i32
-store i32 2, i32* %250, align 4
-%251 = load i32, i32* %250
+%247 = alloca i32
+store i32 2, i32* %247, align 4
+%248 = load i32, i32* %247
+%249 = alloca i32
+store i32 0, i32* %249, align 4
+%250 = load i32, i32* %249
+%251 = getelementptr [6 x i32], [6 x i32]* %arr, i32 0, i32 2
+store i32 0, i32* %251
 %252 = alloca i32
-store i32 0, i32* %252, align 4
+store i32 1, i32* %252, align 4
 %253 = load i32, i32* %252
-%254 = getelementptr [6 x i32], [6 x i32]* %arr, i32 0, i32 5
-store i32 0, i32* %254
-%255 = alloca i32
-store i32 1, i32* %255, align 4
-%256 = load i32, i32* %255
-%257 = alloca i32
-store i32 1, i32* %257, align 4
-%258 = load i32, i32* %257
-%259 = getelementptr [6 x i32], [6 x i32]* %arr, i32 0, i32 4
+%254 = alloca i32
+store i32 0, i32* %254, align 4
+%255 = load i32, i32* %254
+%256 = alloca i32
+store i32 0, i32* %256, align 4
+%257 = load i32, i32* %256
+%258 = getelementptr [6 x i32], [6 x i32]* %arr, i32 0, i32 3
+store i32 0, i32* %258
+%259 = alloca i32
+store i32 1, i32* %259, align 4
 %260 = load i32, i32* %259
-store i32 %260, i32* @var29
 %261 = alloca i32
 store i32 1, i32* %261, align 4
 %262 = load i32, i32* %261
-%263 = getelementptr [2 x i32], [2 x i32]* %arr2, i32 0, i32 1
+%263 = alloca i32
+store i32 30, i32* %263, align 4
 %264 = load i32, i32* %263
-store i32 %264, i32* @var30
-%265 = load i32, i32* @var29
-%266 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @str_int_newline, i32 0, i32 0),i32 %265)
-%267 = load i32, i32* @var30
-%268 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @str_int_newline, i32 0, i32 0),i32 %267)
+%265 = getelementptr [6 x i32], [6 x i32]* %arr, i32 0, i32 4
+store i32 30, i32* %265
+%266 = alloca i32
+store i32 1, i32* %266, align 4
+%267 = load i32, i32* %266
+%268 = alloca i32
+store i32 2, i32* %268, align 4
+%269 = load i32, i32* %268
+%270 = alloca i32
+store i32 0, i32* %270, align 4
+%271 = load i32, i32* %270
+%272 = getelementptr [6 x i32], [6 x i32]* %arr, i32 0, i32 5
+store i32 0, i32* %272
+%273 = alloca i32
+store i32 1, i32* %273, align 4
+%274 = load i32, i32* %273
+%275 = alloca i32
+store i32 1, i32* %275, align 4
+%276 = load i32, i32* %275
+%277 = getelementptr [6 x i32], [6 x i32]* %arr, i32 0, i32 4
+%278 = load i32, i32* %277
+store i32 %278, i32* @var31
+%279 = alloca i32
+store i32 1, i32* %279, align 4
+%280 = load i32, i32* %279
+%281 = getelementptr [2 x i32], [2 x i32]* %arr2, i32 0, i32 1
+%282 = load i32, i32* %281
+store i32 %282, i32* @var32
+%283 = load i32, i32* @var31
+%284 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @str_int_newline, i32 0, i32 0),i32 %283)
+%285 = load i32, i32* @var32
+%286 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @str_int_newline, i32 0, i32 0),i32 %285)
 
 ret i32 0 }

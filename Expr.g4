@@ -1,5 +1,5 @@
 grammar Expr;
-r: ( (stat | function | struct | while | if)? NEWLINE)*;
+r: ((stat | function | generator | struct | while | if)? NEWLINE)*;
 
 stat:
 	TYPE? ID '=' expr											# assign
@@ -28,7 +28,8 @@ expr:
 	| ID '[' expr ']'					# arrayAccess
 	| ID '[' expr ']' '[' expr ']'		# array2dAccess
 	| ID '.' structField				# structAccess
-	| ID functionArgsCall				# functionCall;
+	| ID functionArgsCall				# functionCall
+	| generatorId '<>'					# generatorCall;
 
 structField: ID;
 structArgs: (expr (',' expr)*)?;
@@ -39,6 +40,10 @@ term:
 	factor							# singleFactor
 	| factor op = ('*' | '/') term	# mulDiv;
 factor: value | '(' expr ')';
+
+generator: 'gen' generatorId '(' arrayId ')';
+generatorId: ID;
+arrayId: ID;
 
 function:
 	STARTFUNCTION functionParam functionArgs ':' TYPE functionBlock functionReturn ENDFUNCTION;

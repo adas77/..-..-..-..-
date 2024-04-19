@@ -1,3 +1,4 @@
+import random
 from g4.ExprListener import ExprListener
 from g4.ExprParser import ExprParser
 from .generator import LLVMGenerator, Type
@@ -503,3 +504,60 @@ class ExprListenerImpl(ExprListener):
         )
         # TODO: variable["data"]["length"]
         self.memory.stack.append((anon_id, type_))
+
+        # Exit a parse tree produced by ExprParser#generator.
+
+    def exitGenerator(self, ctx: ExprParser.GeneratorContext):
+        generator_id = ctx.generatorId().ID().getText()
+        array_id = ctx.arrayId().ID().getText()
+        arr = self.memory.get_arr(
+            array_id, self.generator.text_generator.get_current_context()
+        )
+        type_, size = arr
+
+        self.memory.generators[generator_id] = {
+            "array_id": array_id,
+            "type_": type_,
+            "size": size,
+            "global_iterator_id": f"@genrator_it_{random.randint(0, 1000)}",
+            "index": 0,
+        }
+        gen_llvm_id = self.memory.generators[generator_id]["global_iterator_id"]
+        self.generator.generator_start(gen_llvm_id, array_id, type_, size)
+
+        print(
+            f"creating generator {generator_id} with array {array_id} of type {type_} and size {size}"
+        )
+
+    # Exit a parse tree produced by ExprParser#generatorCall.
+    def exitGeneratorCall(self, ctx: ExprParser.GeneratorCallContext):
+        generator_id = ctx.generatorId().ID().getText()
+
+        generator = self.memory.generators[generator_id]
+        array_id = generator["array_id"]
+        type_ = generator["type_"]
+        size = generator["size"]
+        gen_llvm_id = generator["global_iterator_id"]
+
+        array_llvm = self.memory.get_arr(
+            array_id, self.generator.text_generator.get_current_context()
+        )
+
+        print(
+            f"calling generator {generator_id} with array {array_id} of type {type_} and size {size}"
+        )
+
+        arr_val = self.memory.get_arr(
+            array_id, self.generator.text_generator.get_current_context()
+        )
+        type_, size = arr_val
+
+        index = generator["index"]
+        if index >= size:
+            raise ValueError("Index out of bounds")
+
+        anon_id = self.generator.access_arr(array_id, type_, size, index)
+        self.memory.stack.append((anon_id, type_))
+        generator["index"] = index + 1
+
+        # self.generator.generator_call(gen_llvm_id, array_id, type_, size)
