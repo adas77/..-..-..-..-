@@ -1,15 +1,18 @@
 q11 =3
 print("q11")
 print(3)
-# fn fname (param1 : int, param2 : int) :int
-#     global q11
-#     q12=3
-#     print(q11)
-#     return q11
+fn fname (param1 : int, param2 : int) :int
+    global q11
+    q12=3
+    print(q11)
+    return q11
+nf
+
+
+# fn addd (xx : int, yy: int) :int #FIXME
+#     a = xx + yy
+#     return a
 # nf
-
-
-
 
 qwerty = 56787
 # res = fname(1, qwerty) #FIXME
@@ -18,12 +21,12 @@ print("ress")
 print(res)
 # ress = addd(1, 6)
 
-# fn fname2 (param11 : int, param22 : int) :int
-#     q21 = 4 
-#     q22=3
-#     print(q21)
-#     return q22
-# nf
+fn fname2 (param11 : int, param22 : int) :int
+    q21 = 4 
+    q22=3
+    print(q21)
+    return q22
+nf
 
 
 
@@ -101,7 +104,7 @@ print(a)
 #e = arr[22222][22222]
 
 # floats reading
-x = 0.0f
+int x = 0.0f
 read(x)
 x = x + 1.3f
 print("x")
@@ -121,7 +124,7 @@ print(cc)
 d = (0.001 + 1.0) / 3.14
 # error wrong types
 #d = d * 1.0f
-#d = 1 + "xxx"
+ #d = 1 + "xxx"
 print("d")
 print(d)
 
@@ -139,18 +142,18 @@ print(s)
 #
 #
 
-# fn foobar(a : int, b : float) : int
-#     a = a * a+1+6
-#     return a
-# nf
-# 
-# 
-# fn foobar4(aa : int, bb : float) : void
-#     aa = aa * aa
-#     
-#     return
-# 
-# nf
+fn foobar(a : int, b : float) : int
+    a = a * a+1+6
+    return a
+nf
+
+
+fn foobar4(aa : int, bb : float) : void
+    aa = aa * aa
+    
+    return
+
+nf
 
 a=5
 f = foobar(a,4.0f)
@@ -168,8 +171,8 @@ tcurts
 
 v = s1 {10}
 v.a = 123
-xxxx = v.a
-print(xxxx)
+x = v.a
+print(x)
 
 #
 #

@@ -1,3 +1,142 @@
+struct s1
+    int a
+tcurts
+
+v111 = s1 {10}
+v111.a = 123
+x111 = v111.a
+print(x111)
+
+
+q11 =3
+print("q11")
+print(3)
+
+
+
+qwerty = 56787
+
+# fn fname2 (param11 : int, param22 : int) :int
+#     q21 = 4 
+#     q22=3
+#     print(q21)
+#     return q22
+# nf
+
+
+
+randomstring = "hello world"
+print(randomstring)
+
+i = 10
+while i+2
+    print(i)
+    i = i - 2
+    b = 3
+    print(i)
+    print("---")
+    if 1
+        print("Jestem if w while")
+        iter = 5
+        if 1
+            print("Jestem if w if")
+        fi            
+        while iter
+            print("Jestem while w if w while")
+            iter = iter - 1
+        elihw
+    fi
+elihw
+
+while 0
+    print("Nie ma mnie")
+elihw
+
+a = 2
+if a * -1 + 2
+    a = 10
+    print("Nie ma mnie")
+fi
+
+if 0.0 * 2.0 + .01
+    a = 10
+    print("Jestem double")
+fi
+
+if a * -1 + 0*1
+    a = 10
+    print("Jestem int")
+fi
+
+
+int arr[2][3]
+int arr2[2]
+arr2[1]=309
+arr[0][0] = 0
+arr[0][1] = 0
+arr[0][2] = 0
+arr[1][0] = 0
+arr[1][1] = 30
+arr[1][2] = 0
+int xd = arr[1][1]
+int xd2 = arr2[1]
+print(xd)
+print(xd2)
+
+# logic
+a = (1 & 0)
+print("a")
+print(a)
+bbb = a + 2 + 4 + 6 - 1
+ccc = 1.0 - 2.001
+print(bbb)
+print(ccc)
+a = (1 | 0)
+print("a")
+print(a)
+
+# error index
+#e = arr[22222][22222]
+
+# floats reading
+int x = 0.0f
+read(x)
+x = x + 1.3f
+print("x")
+print(x)
+
+hello = "Dobry den"
+print(hello)
+
+# logical ops
+aa = 11
+bb = 21
+cc = aa & 21
+print("cc")
+print(cc)
+
+# doubles
+d = (0.001 + 1.0) / 3.14
+# error wrong types
+#d = d * 1.0f
+ #d = 1 + "xxx"
+print("d")
+print(d)
+
+string s = "xd"
+read(s)
+print(s)
+
+# dynamic functions
+#a = 343
+#a = "asd"
+#print(a)
+
+#
+#
+#
+#
+
 fn foobar(a : int, b : float) : int
     a = a * a+1+6
     return a
@@ -15,3 +154,21 @@ a=5
 f = foobar(a,4.0f)
 print(f)
 
+#
+#
+#
+#
+
+
+struct s1
+    int a
+tcurts
+
+v = s1 {10}
+v.a = 123
+x = v.a
+print(x)
+
+#
+#
+#

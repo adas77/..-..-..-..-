@@ -363,12 +363,6 @@ class ExprListenerImpl(ExprListener):
 
     def exitFunction(self, ctx: ExprParser.FunctionContext):
         type_ = Type.map_(ctx.TYPE().getText())
-        # id_ = (
-        #     ctx.functionReturn().ID().getText()
-        #     if ctx.functionReturn().ID().getText() != "<missing ID>"
-        #     else None
-        # )
-
         id_ = (
             None
             if ctx.functionReturn().ID() is None
@@ -423,16 +417,89 @@ class ExprListenerImpl(ExprListener):
             ID, self.generator.text_generator.get_current_context()
         )
 
-    # def enterStruct(self, ctx: ExprParser.StructContext):
-
-    #     pass
-
     def exitStruct(self, ctx: ExprParser.StructContext):
-        # struct: STARTSTRUCT structId structBlock ENDSTRUCT;
-        # structId: ID;
-        # structBlock: (TYPE ID NEWLINE)*;
-        # STARTSTRUCT: 'struct';
-        # ENDSTRUCT: 'tcurts';
-        print(ctx)
-        print(dir(ctx.structId()))
-        # id_ = ctx.structId.ID().getText()
+        struct_id_ = ctx.structId().ID().getText()
+        block: list[tuple[str, Type]] = [
+            (str(block_id.getText()), Type.map_(block_type.getText()))
+            for block_id, block_type in zip(
+                ctx.structBlock().ID(), ctx.structBlock().TYPE()
+            )
+        ]
+        block = block[::-1]
+        # print(f"{block=}\n\n")
+        self.memory.structs[struct_id_] = {
+            "block": block,
+        }
+        self.generator.struct_start(struct_id_, block)
+        print(f"defining struct {struct_id_} with block {block}")
+
+    def exitStructAssign(self, ctx: ExprParser.StructAssignContext):
+        id_ = ctx.ID().getText()
+        struct_id = ctx.structId().ID().getText()
+        print(f"creating struct {struct_id} with id {id_}")
+
+        self.memory.add(
+            id_,
+            Type.STRUCT,
+            False,
+            self.generator.text_generator.get_current_context(),
+            data=struct_id,
+        )
+
+        print(self.memory)
+        print(f"structs {self.memory.structs}")
+        struct = self.memory.structs[struct_id]
+        block = struct["block"]
+        args: list[tuple[str, Type]] = [
+            self.memory.stack.pop() for _ in range(len(block))
+        ]
+
+        llvm_id = self.memory.get(
+            id_, self.generator.text_generator.get_current_context()
+        )["llvm_id"]
+
+        self.generator.struct_assign(llvm_id, struct_id, args)  # FIXME TODO
+
+    def exitStructFieldAssign(self, ctx: ExprParser.StructFieldAssignContext):
+        # | ID '.' structField '=' expr								# structFieldAssign
+        id_ = ctx.ID().getText()
+        field = ctx.structField().ID().getText()
+        struct = self.memory.get(
+            id_, self.generator.text_generator.get_current_context()
+        )
+        struct_id = struct["data"]
+        block = self.memory.structs[struct_id]["block"]
+
+        field_index, type_ = next(
+            (i, t) for i, (f, t) in enumerate(block) if f == field
+        )
+
+        print(f'assigning field "{field}" to struct "{id_}"')
+        arg = self.memory.stack.pop()
+        llvm_id = self.memory.get(
+            id_, self.generator.text_generator.get_current_context()
+        )["llvm_id"]
+        self.generator.struct_field_assign(llvm_id, struct_id, field_index, arg)
+
+    def exitStructAccess(self, ctx: ExprParser.StructAccessContext):
+        # ID '.' structField				# structAccess
+        id_ = ctx.ID().getText()
+        field = ctx.structField().ID().getText()
+        print(f'accessing field "{field}" from struct "{id_}"')
+        struct = self.memory.get(
+            id_, self.generator.text_generator.get_current_context()
+        )
+        struct_id = struct["data"]
+        block = self.memory.structs[struct_id]["block"]
+        # %2 = load i32, i32* getelementptr inbounds (%struct.s, %struct.s* @aaa, i32 0, i32 0)
+
+        field_index, type_ = next(
+            (i, t) for i, (f, t) in enumerate(block) if f == field
+        )
+
+        llvm_id = struct["llvm_id"]
+        anon_id = self.generator.struct_load_field(
+            llvm_id, struct_id, field_index, type_
+        )
+        # TODO: variable["data"]["length"]
+        self.memory.stack.append((anon_id, type_))

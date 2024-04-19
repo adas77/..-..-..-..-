@@ -11,6 +11,7 @@ class Memory:
         # self.__functions: dict[str, dict] = {}
         # self.__structs: dict[str, dict] = {}
         # self.__arrays: dict[str, dict] = {}
+        self.structs: dict[str, dict] = {}
 
         self.stack: list[tuple[str, Type]] = []
         self.var_counter = 1
@@ -129,7 +130,7 @@ class Memory:
             if variable["locked_type"]:
                 if variable["type_"] != assign_type:
                     raise ValueError(
-                        f"Types: {variable['type_']} must match {assign_type}"
+                        f"Mem Types: {variable['type_']} must match {assign_type}"
                     )
         sign = variable["sign"]
 

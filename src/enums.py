@@ -21,6 +21,7 @@ class Type(Enum):
     STR = ("i8*",)
     FLOAT = ("float",)
     VOID = ("void",)
+    STRUCT = ("struct",)
 
     def __str__(self):
         return f"{self.value[0]}"
@@ -33,6 +34,7 @@ class Type(Enum):
             "string": Type.STR,
             "float": Type.FLOAT,
             "void": Type.VOID,
+            "struct": Type.STRUCT,
         }
         res = types_mappings.get(type_, None)
         if res is None:

@@ -9,7 +9,7 @@ stat:
 	| ID '[' arrayIndexExpr ']' '[' arrayIndexExpr ']' '=' expr	# array2dAssign
 	| 'print' '(' value ')'										# print
 	| 'read' '(' ID ')'											# read
-	| ID '=' '{' expr (',' expr)* '}'							# structAssign
+	| ID '=' structId '{' structArgs '}'						# structAssign
 	| ID '.' structField '=' expr								# structFieldAssign
 	| COMMENT_SINGLELINE										# comment
 	| 'global' ID												# globalDeclaration
@@ -31,6 +31,7 @@ expr:
 	| ID functionArgsCall				# functionCall;
 
 structField: ID;
+structArgs: (expr (',' expr)*)?;
 
 arrayIndexExpr: expr;
 icmpExpr: expr;
@@ -51,7 +52,7 @@ functionArgsCall: '(' (value (',' value)*)? ')';
 STARTFUNCTION: 'fn';
 ENDFUNCTION: 'nf';
 
-struct: STARTSTRUCT structId structBlock ENDSTRUCT;
+struct: STARTSTRUCT structId NEWLINE structBlock ENDSTRUCT;
 structId: ID;
 structBlock: (TYPE ID NEWLINE)*;
 STARTSTRUCT: 'struct';

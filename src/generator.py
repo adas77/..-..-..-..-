@@ -424,6 +424,60 @@ class LLVMGenerator:
         )
         self.text_generator.increment()
 
+    def struct_start(self, id_, block: list[tuple[str, Type]]):
+        block_text = ", ".join(
+            [f"{block_parameter_type}" for _, block_parameter_type in block]
+        )
+        self.text_generator.append_text(
+            f"%struct.{id_} = type {'{'} {block_text} {'}'}",
+            context=Context.HEADER,
+        )
+
+    def struct_assign(self, id_: str, struct_id: str, args_ids: list[tuple[str, Type]]):
+        # self.text_generator.get_incremented()-1
+        # id_ = alloca %struct.s
+        if id_[0] == "%":
+            self.text_generator.append_text(
+                f"{id_} = alloca %struct.{struct_id}", context=Context.FUNCTION
+            )
+        else:
+            self.text_generator.append_text(
+                f"{id_} = global %struct.{struct_id} zeroinitializer",
+                context=Context.HEADER,
+            )
+
+        for i, (arg_id, arg_type) in enumerate(args_ids):
+            self.text_generator.append_text(
+                f"%{self.text_generator.get_incremented()} = getelementptr %struct.{struct_id}, %struct.{struct_id}* {id_}, i32 0, i32 {i}"
+            )
+            self.text_generator.append_text(
+                f"store {arg_type} {arg_id}, {arg_type}* %{self.text_generator.get_incremented()}"
+            )
+            self.text_generator.increment()
+
+    def struct_field_assign(
+        self, id_: str, struct_id: str, field_idx: int, value: tuple[str, Type]
+    ):
+        value_id, type_ = value
+        self.text_generator.append_text(
+            f"%{self.text_generator.get_incremented()} = getelementptr %struct.{struct_id}, %struct.{struct_id}* {id_}, i32 0, i32 {field_idx}"
+        )
+        self.text_generator.append_text(
+            f"store {type_} {value_id}, {type_}* %{self.text_generator.get_incremented()}"
+        )
+        self.text_generator.increment()
+
+    def struct_load_field(self, id_: str, struct_id: str, field_idx: int, type_: Type):
+        self.text_generator.append_text(
+            f"%{self.text_generator.get_incremented()} = getelementptr %struct.{struct_id}, %struct.{struct_id}* {id_}, i32 0, i32 {field_idx}"
+        )
+        self.text_generator.increment()
+        self.text_generator.append_text(
+            f"%{self.text_generator.get_incremented()} = load {type_}, {type_}* %{self.text_generator.get_incremented()-1}"
+        )
+        self.text_generator.increment()
+        return f"%{self.text_generator.get_incremented()-1}"
+
     # --------------------------------------------------------------------------------
     # --------------------------- PRIVATE METHODS ------------------------------------
     # --------------------------------------------------------------------------------
