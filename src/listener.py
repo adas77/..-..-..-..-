@@ -525,9 +525,9 @@ class ExprListenerImpl(ExprListener):
         gen_llvm_id = self.memory.generators[generator_id]["global_iterator_id"]
         self.generator.generator_start(gen_llvm_id, array_id, type_, size)
 
-        print(
-            f"creating generator {generator_id} with array {array_id} of type {type_} and size {size}"
-        )
+        # print(
+        #     f"creating generator {generator_id} with array {array_id} of type {type_} and size {size}"
+        # )
 
     # Exit a parse tree produced by ExprParser#generatorCall.
     def exitGeneratorCall(self, ctx: ExprParser.GeneratorCallContext):
@@ -543,9 +543,9 @@ class ExprListenerImpl(ExprListener):
             array_id, self.generator.text_generator.get_current_context()
         )
 
-        print(
-            f"calling generator {generator_id} with array {array_id} of type {type_} and size {size}"
-        )
+        # print(
+        #     f"calling generator {generator_id} with array {array_id} of type {type_} and size {size}"
+        # )
 
         arr_val = self.memory.get_arr(
             array_id, self.generator.text_generator.get_current_context()
@@ -561,3 +561,74 @@ class ExprListenerImpl(ExprListener):
         generator["index"] = index + 1
 
         # self.generator.generator_call(gen_llvm_id, array_id, type_, size)
+
+        # Exit a parse tree produced by ExprParser#methodDeclaration.
+
+    def exitMethodDeclaration(self, ctx: ExprParser.MethodDeclarationContext):
+        # structId 'method' functionId								# methodDeclaration;
+        struct_id = ctx.structId().ID().getText()
+        method_id = ctx.functionId().ID().getText()
+        print(f"defining method {method_id} for struct {struct_id}")
+
+    def exitMethodCall(self, ctx: ExprParser.MethodCallContext):
+        # ID '.' classMethodId functionArgsCall	# methodCall;
+        struct_id = ctx.ID().getText()
+        method_id = ctx.classMethodId().ID().getText()
+
+        struct = self.memory.get(
+            struct_id, self.generator.text_generator.get_current_context()
+        )
+        struct_type_id = struct["data"]
+        struct = self.memory.structs[struct_type_id]
+        block = struct["block"]
+        fn_args: list[tuple[tuple[str, Type], str, str | None]] = []
+        called_args = ctx.functionArgsCall().value()
+        print(
+            f"calling method {method_id} for struct {struct_id} block {block} with args {called_args}"
+        )
+        for field_index, field_type_ in block:
+            llvm_id = struct_id  # struct["llvm_id"]
+            anon_id = self.generator.struct_load_field(
+                llvm_id, struct_id, field_index, field_type_
+            )
+            # TODO: variable["data"]["length"]
+            # self.memory.stack.append((anon_id, field_type_))
+            # fn_args.append((anon_id, field_type_))
+            fn_args.append(((anon_id, field_type_), None, None))
+
+        anon_id, type_ = self.generator.assign_anonymous("621", Type.INT)
+        # self.memory.stack.append((anon_id, type_))
+        fn_args.append(((anon_id, type_), None, None))
+
+        value = self.memory.get(method_id, Context.HEADER)
+        if value is None:
+            raise ValueError(f"Function with ID: {method_id} does not exist")
+        data = value.get("data", None)
+        if data is None:
+            raise ValueError("Function with ID does not have data")
+        type_returned, args_ = data
+        # args [(id_or_val, type_)...]
+        # print(f"calling method {method_id} with args {fn_args}")
+        self.generator.fn_call(method_id, type_returned, fn_args)
+        self.memory.stack.append(
+            (f"%{self.generator.text_generator.get_incremented()-1}", type_returned)
+        )
+        return
+
+        value = self.memory.get(method_id, Context.HEADER)
+        if value is None:
+            raise ValueError(f"Function with ID: {method_id} does not exist")
+        data = value.get("data", None)
+        if data is None:
+            raise ValueError("Function with ID does not have data")
+        type_returned, args_ = data
+        args: list[tuple[tuple[str, Type], str, str | None]] = [
+            (
+                self.memory.stack.pop(),
+                str(param_name),
+                mut,
+            )
+            for _id_or_val, (param_name, _type_, mut) in zip(called_args, args_)
+        ]  # TODO ARGS  variable["llvm_id"]
+
+        args = args[::-1]

@@ -13,24 +13,29 @@ stat:
 	| ID '.' structField '=' expr								# structFieldAssign
 	| COMMENT_SINGLELINE										# comment
 	| 'global' ID												# globalDeclaration
-	| 'del' ID													# deleteVariable;
+	| 'del' ID													# deleteVariable
+	| structId 'method' functionId								# methodDeclaration;
 
 expr:
-	term								# singleTerm
-	| term op = ('&&' | '||') expr		# logicalAndOr
-	| term op = ('+' | '-') expr		# addSub
-	| term op = ('&' | '|' | '^') expr	# bitAndOrXor
-	| term '!' expr						# logicalNot
-	| '~' expr							# bitNot
-	| expr op = ('&&' | '||') expr		# logicalAndOr
-	| '!' expr							# logicalNot
-	| value								# single
-	| ID '[' expr ']'					# arrayAccess
-	| ID '[' expr ']' '[' expr ']'		# array2dAccess
-	| ID '.' structField				# structAccess
-	| ID functionArgsCall				# functionCall
-	| generatorId '<>'					# generatorCall;
+	term									# singleTerm
+	| term op = ('&&' | '||') expr			# logicalAndOr
+	| term op = ('+' | '-') expr			# addSub
+	| term op = ('&' | '|' | '^') expr		# bitAndOrXor
+	| term '!' expr							# logicalNot
+	| '~' expr								# bitNot
+	| expr op = ('&&' | '||') expr			# logicalAndOr
+	| '!' expr								# logicalNot
+	| value									# single
+	| ID '[' expr ']'						# arrayAccess
+	| ID '[' expr ']' '[' expr ']'			# array2dAccess
+	| ID '.' structField					# structAccess
+	| ID functionArgsCall					# functionCall
+	| generatorId '<>'						# generatorCall
+	| ID '.' classMethodId functionArgsCall	# methodCall;
 
+functionId: ID;
+
+classMethodId: ID;
 structField: ID;
 structArgs: (expr (',' expr)*)?;
 
