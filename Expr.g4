@@ -1,5 +1,5 @@
 grammar Expr;
-r: ( (stat | function | struct | while | if)? NEWLINE)*;
+r: ((stat | function | generator | struct | while | if)? NEWLINE)*;
 
 stat:
 	TYPE? ID '=' expr											# assign
@@ -13,23 +13,29 @@ stat:
 	| ID '.' structField '=' expr								# structFieldAssign
 	| COMMENT_SINGLELINE										# comment
 	| 'global' ID												# globalDeclaration
-	| 'del' ID													# deleteVariable;
+	| 'del' ID													# deleteVariable
+	| structId 'method' functionId								# methodDeclaration;
 
 expr:
-	term								# singleTerm
-	| term op = ('&&' | '||') expr		# logicalAndOr
-	| term op = ('+' | '-') expr		# addSub
-	| term op = ('&' | '|' | '^') expr	# bitAndOrXor
-	| term '!' expr						# logicalNot
-	| '~' expr							# bitNot
-	| expr op = ('&&' | '||') expr		# logicalAndOr
-	| '!' expr							# logicalNot
-	| value								# single
-	| ID '[' expr ']'					# arrayAccess
-	| ID '[' expr ']' '[' expr ']'		# array2dAccess
-	| ID '.' structField				# structAccess
-	| ID functionArgsCall				# functionCall;
+	term									# singleTerm
+	| term op = ('&&' | '||') expr			# logicalAndOr
+	| term op = ('+' | '-') expr			# addSub
+	| term op = ('&' | '|' | '^') expr		# bitAndOrXor
+	| term '!' expr							# logicalNot
+	| '~' expr								# bitNot
+	| expr op = ('&&' | '||') expr			# logicalAndOr
+	| '!' expr								# logicalNot
+	| value									# single
+	| ID '[' expr ']'						# arrayAccess
+	| ID '[' expr ']' '[' expr ']'			# array2dAccess
+	| ID '.' structField					# structAccess
+	| ID functionArgsCall					# functionCall
+	| generatorId '<>'						# generatorCall
+	| ID '.' classMethodId functionArgsCall	# methodCall;
 
+functionId: ID;
+
+classMethodId: ID;
 structField: ID;
 structArgs: (expr (',' expr)*)?;
 
@@ -39,6 +45,10 @@ term:
 	factor							# singleFactor
 	| factor op = ('*' | '/') term	# mulDiv;
 factor: value | '(' expr ')';
+
+generator: 'gen' generatorId '(' arrayId ')';
+generatorId: ID;
+arrayId: ID;
 
 function:
 	STARTFUNCTION functionParam functionArgs ':' TYPE functionBlock functionReturn ENDFUNCTION;

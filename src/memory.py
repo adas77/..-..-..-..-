@@ -16,6 +16,8 @@ class Memory:
         self.stack: list[tuple[str, Type]] = []
         self.var_counter = 1
 
+        self.generators = {}
+
     def clean_local_variables(self):
         self.__local_variables.clear()
 
